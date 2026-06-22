@@ -1,0 +1,300 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Syne:wght@700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-surface: #fff8f2;
+  --color-surface-dim: #f3d79e;
+  --color-surface-bright: #fff8f2;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #fff2de;
+  --color-surface-container: #ffecc9;
+  --color-surface-container-high: #ffe5b4;
+  --color-surface-container-highest: #fcdfa6;
+  --color-on-surface: #261a00;
+  --color-on-surface-variant: #584238;
+  --color-inverse-surface: #3e2e05;
+  --color-inverse-on-surface: #ffefd4;
+  --color-outline: #8c7166;
+  --color-outline-variant: #dfc0b3;
+  --color-surface-tint: #a04100;
+  --color-primary: #a04100;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #ff7a30;
+  --color-on-primary-container: #622400;
+  --color-inverse-primary: #ffb693;
+  --color-secondary: #944b0a;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #fe9f5b;
+  --color-on-secondary-container: #733700;
+  --color-tertiary: #7a5830;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #c2996b;
+  --color-on-tertiary-container: #4d310c;
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+  --color-primary-fixed: #ffdbcc;
+  --color-primary-fixed-dim: #ffb693;
+  --color-on-primary-fixed: #351000;
+  --color-on-primary-fixed-variant: #7a2f00;
+  --color-secondary-fixed: #ffdcc6;
+  --color-secondary-fixed-dim: #ffb786;
+  --color-on-secondary-fixed: #311300;
+  --color-on-secondary-fixed-variant: #723600;
+  --color-tertiary-fixed: #ffddba;
+  --color-tertiary-fixed-dim: #ebbe8e;
+  --color-on-tertiary-fixed: #2b1700;
+  --color-on-tertiary-fixed-variant: #5f401b;
+  --color-background: #fff8f2;
+  --color-on-background: #261a00;
+  --color-surface-variant: #fcdfa6;
+  --color-obsidian: #1C1E1C;
+  --color-cream-warm: #FCDFA6;
+  --color-blaze-orange: #FF7A30;
+  --color-glow-peach: #FFA05C;
+  --color-sand-gold: #D4A97A;
+
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-sans: "Poppins", sans-serif;
+  --font-hero: "Poppins", sans-serif;
+  --font-display: "Poppins", sans-serif;
+  --font-mono: "Fira Code", monospace;
+  --font-tag: "Poppins", sans-serif;
+  --font-bricolage: "Bricolage Grotesque", sans-serif;
+  --font-syne: "Syne", sans-serif;
+}
+
+@layer utilities {
+  .brutalist-shadow {
+    box-shadow: 6px 6px 0px 0px #FF7A30;
+    will-change: transform;
+  }
+  .brutalist-shadow-dark {
+    box-shadow: 6px 6px 0px 0px #1C1E1C;
+    will-change: transform;
+  }
+  .brutalist-shadow-gold {
+    box-shadow: 6px 6px 0px 0px #D4A97A;
+    will-change: transform;
+  }
+  
+  .noise-overlay {
+    position: relative;
+  }
+  
+  .marquee {
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .marquee-content {
+    display: inline-flex;
+    will-change: transform;
+  }
+  @keyframes slide-up-fade {
+    0% { transform: translateY(20px) scale(0.95); opacity: 0; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  @keyframes fade-in-down {
+    0% { transform: translateY(-10px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+
+  .animate-slide-up-fade {
+    animation: slide-up-fade 0.3s ease-out forwards;
+    will-change: transform, opacity;
+  }
+  .animate-fade-in-down {
+    animation: fade-in-down 0.2s ease-out forwards;
+    will-change: transform, opacity;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* GSAP liquid fill button hover effect
+     Dibuat 2 layer: badan cairan solid + kepala wave yang diputar GSAP.
+     Ini mencegah bug warna hanya muncul di sisi kiri/kanan pada tombol pill. */
+  .btn-liquid {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    z-index: 1;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    transition: box-shadow 0.18s ease, border-color 0.18s ease;
+  }
+
+  .btn-liquid > *:not(.gsap-liquid-fill) {
+    position: relative;
+    z-index: 2;
+  }
+
+  .gsap-liquid-fill {
+    position: absolute;
+    left: 50%;
+    top: 100%;
+    width: 300%;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 1;
+    will-change: transform;
+    transform: translate3d(-50%, -50%, 0) scale(0);
+    transform-origin: 50% 50%;
+  }
+
+  .btn-liquid-orange:hover,
+  .btn-liquid-white:hover,
+  .btn-liquid-obsidian:hover,
+  .btn-liquid-transparent:hover {
+    border-color: #1C1E1C !important;
+  }
+
+  .btn-liquid-white.is-liquid-hover:not(.bg-obsidian) {
+    box-shadow: 5px 5px 0px 0px #ffffff !important;
+    border-color: #ffffff !important;
+  }
+
+  .btn-liquid-obsidian.is-liquid-hover {
+    box-shadow: 5px 5px 0px 0px #1C1E1C !important;
+    border-color: #1C1E1C !important;
+  }
+
+  /* Custom smooth navbar hover indicator */
+  .nav-link-underline {
+    position: relative;
+  }
+  .nav-link-underline::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 3px;
+    background-color: #FF7A30;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .nav-link-underline:hover::after,
+  .nav-link-underline.active::after {
+    width: 100%;
+  }
+
+  /* Simple page pop-in animation on load */
+  @keyframes subpage-pop-in {
+    0% {
+      opacity: 0;
+      transform: scale(0.94) translateY(12px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  .subpage-animate {
+    opacity: 0;
+    animation: subpage-pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  .delay-75 { animation-delay: 75ms; }
+  .delay-150 { animation-delay: 150ms; }
+  .delay-225 { animation-delay: 225ms; }
+  .delay-300 { animation-delay: 300ms; }
+
+  .route-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .page-slider-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 120;
+    pointer-events: none;
+    display: none;
+    background: #FF7A30;
+    border-top: 4px solid #1C1E1C;
+    border-bottom: 4px solid #1C1E1C;
+    overflow: hidden;
+    will-change: transform;
+  }
+
+  .page-slider-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 24px;
+    border: 2px dashed rgba(28, 30, 28, 0.32);
+    border-radius: 34px;
+  }
+
+  .page-slider-overlay::after {
+    content: 'Madfat';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) rotate(-2deg);
+    padding: 14px 28px;
+    border: 3px solid #1C1E1C;
+    border-radius: 999px;
+    background: #fff8f2;
+    color: #FF7A30;
+    box-shadow: 6px 6px 0 #1C1E1C;
+    font-family: var(--font-tag);
+    font-weight: 900;
+    font-size: clamp(28px, 7vw, 74px);
+    letter-spacing: -0.05em;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+html {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  background-color: #fff8f2;
+  scroll-behavior: auto;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+img {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.hero-title-line,
+.hero-desc,
+.hero-btn,
+.hero-avatar,
+.hero-proof-star,
+.hero-proof-text,
+.hero-card-spotify,
+.hero-card-netflix,
+.hero-card-disney,
+.hero-mascot,
+.animate-pop-in,
+.page-pop-btn,
+.page-header-title,
+.page-header-desc,
+.subpage-filter-button {
+  opacity: 0;
+}
+
+
+
