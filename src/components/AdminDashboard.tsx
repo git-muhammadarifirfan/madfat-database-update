@@ -15,6 +15,7 @@ import {
   DEFAULT_IMGBB_KEY,
   fetchTransactionsFromSheets,
   updateTransactionStatusInSheets,
+  deleteTransactionInSheets,
   verifyAdminPinInSheets,
   updateAdminPinInSheets,
   upsertWebsitePackageInSheets,
@@ -143,8 +144,10 @@ export default function AdminDashboard({
     navigateToTab(tab);
     setSelectedProductIds([]);
     setSelectedPackageIds([]);
+    setSelectedOrderIds([]);
     setIsProductBulkMode(false);
     setIsPackageBulkMode(false);
+    setIsOrderBulkMode(false);
   };
 
   // Security Verification
@@ -201,8 +204,10 @@ export default function AdminDashboard({
   // Bulk action states
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [selectedPackageIds, setSelectedPackageIds] = useState<string[]>([]);
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
   const [isProductBulkMode, setIsProductBulkMode] = useState<boolean>(false);
   const [isPackageBulkMode, setIsPackageBulkMode] = useState<boolean>(false);
+  const [isOrderBulkMode, setIsOrderBulkMode] = useState<boolean>(false);
 
   // Mobile Navigation Drawer Toggle
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
@@ -225,7 +230,7 @@ export default function AdminDashboard({
     isOpen: boolean;
     title: string;
     message: string;
-    actionType: 'delete_product' | 'delete_package' | 'save_settings' | 'change_pin' | 'reveal_sheets_url' | 'reveal_imgbb_key' | 'logout' | 'bulk_delete_products' | 'bulk_delete_packages';
+    actionType: 'delete_product' | 'delete_package' | 'delete_order' | 'save_settings' | 'change_pin' | 'reveal_sheets_url' | 'reveal_imgbb_key' | 'logout' | 'bulk_delete_products' | 'bulk_delete_packages' | 'bulk_delete_orders';
     targetId?: string;
     payload?: any;
   } | null>(null);
@@ -242,6 +247,12 @@ export default function AdminDashboard({
       setSelectedPackageIds([]);
     }
   }, [isPackageBulkMode]);
+
+  useEffect(() => {
+    if (!isOrderBulkMode) {
+      setSelectedOrderIds([]);
+    }
+  }, [isOrderBulkMode]);
 
   // Chart Animation trigger
   const [chartAnimated, setChartAnimated] = useState<boolean>(false);
@@ -558,7 +569,7 @@ export default function AdminDashboard({
   const triggerStrictAction = (
     title: string,
     message: string,
-    actionType: 'delete_product' | 'delete_package' | 'save_settings' | 'change_pin' | 'reveal_sheets_url' | 'reveal_imgbb_key' | 'logout' | 'bulk_delete_products' | 'bulk_delete_packages',
+    actionType: 'delete_product' | 'delete_package' | 'delete_order' | 'save_settings' | 'change_pin' | 'reveal_sheets_url' | 'reveal_imgbb_key' | 'logout' | 'bulk_delete_products' | 'bulk_delete_packages' | 'bulk_delete_orders',
     targetId?: string,
     payload?: any
   ) => {
@@ -614,6 +625,16 @@ export default function AdminDashboard({
           console.error(err);
           triggerNotification('Sinkronisasi hapus paket gagal!', 'error');
         });
+      } else if (actionType === 'delete_order' && targetId) {
+        setTransactions(prev => prev.filter(t => t.orderId !== targetId));
+        triggerNotification('Transaksi/Orderan berhasil dihapus!', 'success');
+        setIsLoading(false);
+        deleteTransactionInSheets(sheetsUrl, adminPassword, adminPinCode, targetId).then(() => {
+          loadTransactions();
+        }).catch(err => {
+          console.error(err);
+          triggerNotification('Sinkronisasi hapus transaksi gagal!', 'error');
+        });
       } else if (actionType === 'bulk_delete_products' && payload?.ids) {
         const ids = payload.ids as string[];
         if (setProducts) {
@@ -644,6 +665,21 @@ export default function AdminDashboard({
             await deleteWebsitePackageInSheets(sheetsUrl, adminPassword, adminPinCode, ids[i]);
           }
           onRefresh();
+        })().catch(err => {
+          console.error(err);
+          triggerNotification('Sinkronisasi hapus masal gagal!', 'error');
+        });
+      } else if (actionType === 'bulk_delete_orders' && payload?.ids) {
+        const ids = payload.ids as string[];
+        setTransactions(prev => prev.filter(t => !ids.includes(t.orderId)));
+        setSelectedOrderIds([]);
+        triggerNotification(`${ids.length} transaksi/orderan berhasil dihapus!`, 'success');
+        setIsLoading(false);
+        (async () => {
+          for (let i = 0; i < ids.length; i++) {
+            await deleteTransactionInSheets(sheetsUrl, adminPassword, adminPinCode, ids[i]);
+          }
+          loadTransactions();
         })().catch(err => {
           console.error(err);
           triggerNotification('Sinkronisasi hapus masal gagal!', 'error');
@@ -1842,13 +1878,41 @@ export default function AdminDashboard({
                 <p className="font-sans text-xs text-slate-500 font-medium mt-1">Kelola status pembayaran dan cetak nota belanja pelanggan.</p>
               </div>
 
-              <button
-                onClick={loadTransactions}
-                disabled={loadingTransactions}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-semibold uppercase transition-all duration-200 shadow-sm cursor-pointer disabled:opacity-50"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${loadingTransactions ? 'animate-spin' : ''}`} /> {loadingTransactions ? 'MEMPROSES...' : 'Refresh Data'}
-              </button>
+              <div className="flex flex-wrap items-center gap-2.5">
+                {isOrderBulkMode && selectedOrderIds.length > 0 && (
+                  <button
+                    onClick={() => triggerStrictAction(
+                      'HAPUS TRANSAKSI MASSAL?',
+                      `Apakah Anda yakin ingin menghapus ${selectedOrderIds.length} transaksi/orderan terpilih secara permanen dari Google Sheets?`,
+                      'bulk_delete_orders',
+                      undefined,
+                      { ids: selectedOrderIds }
+                    )}
+                    className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white border-2 border-red-650 rounded-xl text-xs font-semibold uppercase transition-all duration-200 shadow-sm cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Hapus Terpilih ({selectedOrderIds.length})
+                  </button>
+                )}
+
+                <button
+                  onClick={() => setIsOrderBulkMode(!isOrderBulkMode)}
+                  className={`px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold uppercase transition-all duration-200 shadow-sm cursor-pointer ${
+                    isOrderBulkMode
+                      ? 'bg-amber-50 border-amber-200 text-amber-800'
+                      : 'bg-white hover:bg-slate-50 text-slate-700'
+                  }`}
+                >
+                  {isOrderBulkMode ? 'Selesai Bulk' : 'Aksi Massal'}
+                </button>
+
+                <button
+                  onClick={loadTransactions}
+                  disabled={loadingTransactions}
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-semibold uppercase transition-all duration-200 shadow-sm cursor-pointer disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${loadingTransactions ? 'animate-spin' : ''}`} /> {loadingTransactions ? 'MEMPROSES...' : 'Refresh Data'}
+                </button>
+              </div>
             </div>
 
             {/* Orders Table/Card View */}
@@ -1870,6 +1934,22 @@ export default function AdminDashboard({
                   <table className="w-full border-collapse text-left text-xs font-sans text-obsidian min-w-[900px]">
                     <thead>
                       <tr className="bg-slate-50 text-slate-500 border-b border-slate-100">
+                        {isOrderBulkMode && (
+                          <th className="p-3.5 text-center w-12">
+                            <input
+                              type="checkbox"
+                              className="w-4 h-4 rounded border border-orange-200 text-blaze-orange focus:ring-0 focus:ring-offset-0 cursor-pointer accent-blaze-orange"
+                              checked={transactions.length > 0 && selectedOrderIds.length === transactions.length}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedOrderIds(transactions.map((tx: any) => tx.orderId));
+                                } else {
+                                  setSelectedOrderIds([]);
+                                }
+                              }}
+                            />
+                          </th>
+                        )}
                         <th className="p-3.5 font-semibold uppercase text-slate-500 tracking-wider text-[10px]">Invoice ID</th>
                         <th className="p-3.5 font-semibold uppercase text-slate-500 tracking-wider text-[10px]">Tanggal</th>
                         <th className="p-3.5 font-semibold uppercase text-slate-500 tracking-wider text-[10px]">Pelanggan</th>
@@ -1888,6 +1968,22 @@ export default function AdminDashboard({
 
                         return (
                           <tr key={tx.orderId} className="hover:bg-slate-50/60 transition-colors border-b border-slate-100 last:border-b-0">
+                            {isOrderBulkMode && (
+                              <td className="p-3 text-center w-12">
+                                <input
+                                  type="checkbox"
+                                  className="w-4 h-4 rounded border border-orange-200 text-blaze-orange focus:ring-0 focus:ring-offset-0 cursor-pointer accent-blaze-orange"
+                                  checked={selectedOrderIds.includes(tx.orderId)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setSelectedOrderIds(prev => [...prev, tx.orderId]);
+                                    } else {
+                                      setSelectedOrderIds(prev => prev.filter(id => id !== tx.orderId));
+                                    }
+                                  }}
+                                />
+                              </td>
+                            )}
                             <td className="p-3 font-mono">
                               <span className="bg-orange-50/60 px-2.5 py-1 border border-orange-200/40 rounded font-semibold text-blaze-orange font-mono">
                                 {tx.orderId}
@@ -1922,6 +2018,18 @@ export default function AdminDashboard({
                                 >
                                   <Printer className="w-3.5 h-3.5" />
                                 </button>
+
+                                <button
+                                  onClick={() => triggerStrictAction(
+                                    'HAPUS TRANSAKSI?',
+                                    `Apakah Anda yakin ingin menghapus transaksi "${tx.orderId}"? Aksi ini tidak dapat dibatalkan di database Google Sheets.`,
+                                    'delete_order',
+                                    tx.orderId
+                                  )}
+                                  className="p-1.5 bg-slate-50 border border-slate-200 rounded-xl hover:bg-red-500 hover:text-white hover:border-red-500 transition-all cursor-pointer shadow-sm active:scale-95"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
                               </div>
                             </td>
                           </tr>
@@ -1939,43 +2047,73 @@ export default function AdminDashboard({
                     if (tx.status === 'CANCELLED') statusBg = 'bg-red-50 border border-red-250 text-red-800';
 
                     return (
-                      <div key={tx.orderId} className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="bg-orange-50/60 px-2.5 py-1 border border-orange-200/40 rounded font-semibold text-blaze-orange font-mono text-xs">
-                            {tx.orderId}
-                          </span>
-                          <span className="font-semibold font-mono text-[10px] text-slate-400">{tx.createdAt}</span>
-                        </div>
-                        <div className="space-y-1 text-xs text-slate-600">
-                          <div><span className="font-semibold text-slate-700 uppercase">Pelanggan:</span> {tx.customerName}</div>
-                          <div><span className="font-semibold text-slate-700 uppercase">Email:</span> {tx.customerEmail}</div>
-                          <div><span className="font-semibold text-slate-700 uppercase">Layanan:</span> {tx.items}</div>
-                          <div><span className="font-semibold text-slate-700 uppercase">Total:</span> <span className="font-bold text-blaze-orange font-mono">{formatPrice(tx.totalAmount)}</span></div>
-                        </div>
-                        <div className="flex items-center justify-between pt-2 border-t border-dashed border-slate-100">
-                          <div>
-                            <span className={`text-[9px] font-semibold px-2.5 py-1 rounded-full uppercase border ${statusBg}`}>
-                              {tx.status}
-                            </span>
+                      <div key={tx.orderId} className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm flex items-start gap-4">
+                        {isOrderBulkMode && (
+                          <div className="pt-1.5 shrink-0">
+                            <input
+                              type="checkbox"
+                              className="w-5 h-5 rounded border border-slate-200 text-blaze-orange focus:ring-0 focus:ring-offset-0 cursor-pointer accent-blaze-orange"
+                              checked={selectedOrderIds.includes(tx.orderId)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedOrderIds(prev => [...prev, tx.orderId]);
+                                } else {
+                                  setSelectedOrderIds(prev => prev.filter(id => id !== tx.orderId));
+                                }
+                              }}
+                            />
                           </div>
-                          <div className="flex items-center gap-2">
-                            <select
-                              value={tx.status}
-                              disabled={isLoading}
-                              onChange={(e) => handleUpdateStatus(tx.orderId, e.target.value)}
-                              className="px-2.5 py-1 border border-slate-200 rounded-xl bg-white text-[10px] font-semibold uppercase focus:outline-none cursor-pointer text-slate-700 font-sans shadow-sm"
-                            >
-                              <option value="PENDING">PENDING</option>
-                              <option value="SUCCESS">SUCCESS</option>
-                              <option value="CANCELLED">CANCELLED</option>
-                            </select>
+                        )}
+                        <div className="flex-1 min-w-0 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="bg-orange-50/60 px-2.5 py-1 border border-orange-200/40 rounded font-semibold text-blaze-orange font-mono text-xs">
+                              {tx.orderId}
+                            </span>
+                            <span className="font-semibold font-mono text-[10px] text-slate-400">{tx.createdAt}</span>
+                          </div>
+                          <div className="space-y-1 text-xs text-slate-600">
+                            <div><span className="font-semibold text-slate-700 uppercase">Pelanggan:</span> {tx.customerName}</div>
+                            <div><span className="font-semibold text-slate-700 uppercase">Email:</span> {tx.customerEmail}</div>
+                            <div><span className="font-semibold text-slate-700 uppercase">Layanan:</span> {tx.items}</div>
+                            <div><span className="font-semibold text-slate-700 uppercase">Total:</span> <span className="font-bold text-blaze-orange font-mono">{formatPrice(tx.totalAmount)}</span></div>
+                          </div>
+                          <div className="flex items-center justify-between pt-2 border-t border-dashed border-slate-100">
+                            <div>
+                              <span className={`text-[9px] font-semibold px-2.5 py-1 rounded-full uppercase border ${statusBg}`}>
+                                {tx.status}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <select
+                                value={tx.status}
+                                disabled={isLoading}
+                                onChange={(e) => handleUpdateStatus(tx.orderId, e.target.value)}
+                                className="px-2.5 py-1 border border-slate-200 rounded-xl bg-white text-[10px] font-semibold uppercase focus:outline-none cursor-pointer text-slate-700 font-sans shadow-sm"
+                              >
+                                <option value="PENDING">PENDING</option>
+                                <option value="SUCCESS">SUCCESS</option>
+                                <option value="CANCELLED">CANCELLED</option>
+                              </select>
 
-                            <button
-                              onClick={() => setPrintingTransaction(tx)}
-                              className="p-2 bg-slate-50 border border-slate-200 rounded-xl hover:bg-blaze-orange hover:text-white hover:border-blaze-orange transition-all cursor-pointer shadow-sm"
-                            >
-                              <Printer className="w-3.5 h-3.5" />
-                            </button>
+                              <button
+                                onClick={() => setPrintingTransaction(tx)}
+                                className="p-2 bg-slate-50 border border-slate-200 rounded-xl hover:bg-blaze-orange hover:text-white hover:border-blaze-orange transition-all cursor-pointer shadow-sm"
+                              >
+                                <Printer className="w-3.5 h-3.5" />
+                              </button>
+
+                              <button
+                                onClick={() => triggerStrictAction(
+                                  'HAPUS TRANSAKSI?',
+                                  `Apakah Anda yakin ingin menghapus transaksi "${tx.orderId}"? Aksi ini tidak dapat dibatalkan di database Google Sheets.`,
+                                  'delete_order',
+                                  tx.orderId
+                                )}
+                                className="p-2 bg-slate-50 border border-slate-200 rounded-xl hover:bg-red-500 hover:text-white hover:border-red-500 transition-all cursor-pointer shadow-sm"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
