@@ -1121,6 +1121,15 @@ export default function App() {
           )}
         </main>
 
+        {!isDashboard && (
+          <Suspense fallback={null}>
+            <Footer
+              onDirectWhatsApp={handleDirectWhatsApp}
+              onCartOpen={() => setIsCartOpen(true)}
+            />
+          </Suspense>
+        )}
+
         <Suspense fallback={null}>
           <Cart
             isOpen={isCartOpen}
