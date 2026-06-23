@@ -103,8 +103,8 @@ const LoadingScreen = ({ onComplete }: { onComplete?: () => void }) => {
       .to('.loader-pupil', { x: 0, y: 0, duration: 0.4, ease: 'power1.inOut', delay: 0.2 });
 
     // Initial mount scale-in for the doodles
-    gsap.fromTo('.loader-doodle', 
-      { scale: 0, opacity: 0 }, 
+    gsap.fromTo('.loader-doodle',
+      { scale: 0, opacity: 0 },
       { scale: 1, opacity: 1, duration: 0.85, ease: 'back.out(1.8)', stagger: 0.1, delay: 0.15 }
     );
 
@@ -257,23 +257,23 @@ const LoadingScreen = ({ onComplete }: { onComplete?: () => void }) => {
       className="fixed inset-0 z-[99999] flex flex-col items-center justify-center select-none overflow-hidden"
     >
       {/* Background layer panels (Orange Shutter) */}
-      <div 
-        className="loader-shutter-orange-left absolute inset-0 bg-blaze-orange z-10 pointer-events-none" 
-        style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }} 
+      <div
+        className="loader-shutter-orange-left absolute inset-0 bg-blaze-orange z-10 pointer-events-none"
+        style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }}
       />
-      <div 
-        className="loader-shutter-orange-right absolute inset-0 bg-blaze-orange z-10 pointer-events-none" 
-        style={{ clipPath: 'polygon(100% 0, 100% 100%, 0 100%)' }} 
+      <div
+        className="loader-shutter-orange-right absolute inset-0 bg-blaze-orange z-10 pointer-events-none"
+        style={{ clipPath: 'polygon(100% 0, 100% 100%, 0 100%)' }}
       />
 
       {/* Foreground layer panels (Cream Shutter) */}
-      <div 
-        className="loader-shutter-cream-left absolute inset-0 bg-[#fff8f2] z-20 pointer-events-none" 
-        style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }} 
+      <div
+        className="loader-shutter-cream-left absolute inset-0 bg-[#fff8f2] z-20 pointer-events-none"
+        style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }}
       />
-      <div 
-        className="loader-shutter-cream-right absolute inset-0 bg-[#fff8f2] z-20 pointer-events-none" 
-        style={{ clipPath: 'polygon(100% 0, 100% 100%, 0 100%)' }} 
+      <div
+        className="loader-shutter-cream-right absolute inset-0 bg-[#fff8f2] z-20 pointer-events-none"
+        style={{ clipPath: 'polygon(100% 0, 100% 100%, 0 100%)' }}
       />
 
       {/* Floating custom doodles - placed outside content to prevent scaling/fading with the center logo */}
@@ -326,7 +326,7 @@ const NotFoundPage = ({ onGoHome }: { onGoHome: () => void }) => {
   useEffect(() => {
     // 1. Smooth GSAP entrance animation
     const ctx = gsap.context(() => {
-      gsap.fromTo('.notfound-box', 
+      gsap.fromTo('.notfound-box',
         { scale: 0.9, opacity: 0, y: 30 },
         { scale: 1, opacity: 1, y: 0, duration: 0.7, ease: 'back.out(1.4)' }
       );
@@ -350,22 +350,22 @@ const NotFoundPage = ({ onGoHome }: { onGoHome: () => void }) => {
       if (!leftPupilRef.current || !rightPupilRef.current) return;
 
       const pupils = [leftPupilRef.current, rightPupilRef.current];
-      
+
       pupils.forEach((pupil) => {
         const rect = pupil.getBoundingClientRect();
         const eyeCenterX = rect.left + rect.width / 2;
         const eyeCenterY = rect.top + rect.height / 2;
-        
+
         // Calculate angle and distance
         const dx = e.clientX - eyeCenterX;
         const dy = e.clientY - eyeCenterY;
         const angle = Math.atan2(dy, dx);
-        
+
         // Limit max offset of pupils inside the eye
-        const maxOffset = 6; 
+        const maxOffset = 6;
         const offsetX = Math.cos(angle) * maxOffset;
         const offsetY = Math.sin(angle) * maxOffset;
-        
+
         // Smoothly animate the pupil position using GSAP
         gsap.to(pupil, {
           x: offsetX,
@@ -393,7 +393,7 @@ const NotFoundPage = ({ onGoHome }: { onGoHome: () => void }) => {
 
       {/* Main card box */}
       <div className="notfound-box w-full max-w-md bg-white border-4 border-obsidian rounded-2xl p-8 shadow-[8px_8px_0px_0px_rgba(28,30,28,1)] text-center relative z-20">
-        
+
         {/* Animated mascot cartoon container */}
         <div className="notfound-mascot flex justify-center mb-6">
           <div className="relative flex gap-2 items-center bg-[#FFECC9] border-4 border-obsidian p-4 rounded-full shadow-[4px_4px_0px_0px_#1C1E1C]">
@@ -415,7 +415,7 @@ const NotFoundPage = ({ onGoHome }: { onGoHome: () => void }) => {
         <h1 className="text-2xl sm:text-3xl font-hero font-extrabold text-obsidian uppercase tracking-tight mb-3">
           HALAMAN HILANG!
         </h1>
-        
+
         <p className="text-xs sm:text-sm text-on-surface-variant font-bold uppercase leading-relaxed mb-8 max-w-sm mx-auto">
           Ups! Halaman tidak ditemukan atau akses portal admin Anda belum terverifikasi.
         </p>
@@ -425,7 +425,7 @@ const NotFoundPage = ({ onGoHome }: { onGoHome: () => void }) => {
             onClick={onGoHome}
             className="w-full py-3 bg-blaze-orange hover:bg-blaze-orange/95 text-white border-3 border-obsidian rounded-xl text-xs font-bold uppercase transition-all shadow-[3px_3px_0px_0px_rgba(28,30,28,1)] active:translate-y-0.5 active:shadow-[1px_1px_0px_0px_rgba(28,30,28,1)] cursor-pointer"
           >
-            ← Balik Belanja
+            Balik Belanja
           </button>
         </div>
       </div>
@@ -434,15 +434,7 @@ const NotFoundPage = ({ onGoHome }: { onGoHome: () => void }) => {
 };
 
 export default function App() {
-  // Redirect legacy /admin path to /dashboard
-  const initialPath = (() => {
-    const p = window.location.pathname;
-    if (p === '/admin' || p === '/madfatadmin') {
-      window.history.replaceState({}, '', '/madfatdashboard');
-      return '/madfatdashboard';
-    }
-    return p;
-  })();
+  const initialPath = window.location.pathname;
 
   const [isInitialLoading, setIsInitialLoading] = useState(!initialPath.startsWith('/madfatdashboard'));
   const [products, setProducts] = useState<DigitalProduct[]>(() => {
@@ -847,7 +839,7 @@ export default function App() {
     window.open(`https://wa.me/${adminWhatsAppNumber}?text=${encodeURIComponent(message)}`, '_blank');
   }, []);
 
-  const cartCount = useMemo(() => 
+  const cartCount = useMemo(() =>
     cartItems.reduce((acc, item) => acc + item.quantity, 0),
     [cartItems]
   );
@@ -859,52 +851,50 @@ export default function App() {
       )}
       <div className="min-h-screen bg-surface text-obsidian relative overflow-x-hidden font-sans">
         <div ref={overlayRef} className="page-slider-overlay" aria-hidden="true" />
-      <Suspense fallback={null}>
-        {currentPath === '/' && !isInitialLoading && <FloatingDoodles />}
-      </Suspense>
+        <Suspense fallback={null}>
+          {currentPath === '/' && !isInitialLoading && <FloatingDoodles />}
+        </Suspense>
 
-            {notification && (
-              <div
-                className={`fixed top-20 right-6 md:right-12 z-200 border border-orange-100/50 px-5 py-3.5 rounded-xl flex items-center gap-3 shadow-md text-xs sm:text-sm font-sans font-medium animate-slide-up-fade ${
-                  notification.type === 'error'
-                    ? 'bg-[#FEE2E2] text-[#991B1B]'
-                    : 'bg-[#E8FBF0] text-[#166534]'
-                }`}
-              >
-                <div className={`w-6 h-6 rounded-full text-white flex items-center justify-center font-semibold ${
-                  notification.type === 'error' ? 'bg-[#EF4444]' : 'bg-[#22C55E]'
-                }`}>
-                  {notification.type === 'error' ? '✕' : '✓'}
-                </div>
-                <span>{notification.text}</span>
-              </div>
-            )}
+        {notification && (
+          <div
+            className={`fixed top-20 right-6 md:right-12 z-200 border border-orange-100/50 px-5 py-3.5 rounded-xl flex items-center gap-3 shadow-md text-xs sm:text-sm font-sans font-medium animate-slide-up-fade ${notification.type === 'error'
+              ? 'bg-[#FEE2E2] text-[#991B1B]'
+              : 'bg-[#E8FBF0] text-[#166534]'
+              }`}
+          >
+            <div className={`w-6 h-6 rounded-full text-white flex items-center justify-center font-semibold ${notification.type === 'error' ? 'bg-[#EF4444]' : 'bg-[#22C55E]'
+              }`}>
+              {notification.type === 'error' ? '✕' : '✓'}
+            </div>
+            <span>{notification.text}</span>
+          </div>
+        )}
 
-          {!isDashboard && (
-            <button
-              onClick={handleDirectWhatsApp}
-              className="fixed bottom-8 right-8 z-45 bg-[#25D366] text-white border-2 border-obsidian p-4 rounded-full shadow-2xl hover:bg-emerald-600 transition-colors cursor-pointer brutalist-shadow-dark flex items-center justify-center gap-2 group"
-            >
-              <span className="font-tag text-xs font-black uppercase hidden group-hover:inline-block tracking-wider pl-1 text-white">
-                Tanya Admin
-              </span>
-              <MessageCircle className="w-7 h-7 fill-current stroke-none text-white" />
-            </button>
-          )}
+        {!isDashboard && (
+          <button
+            onClick={handleDirectWhatsApp}
+            className="fixed bottom-8 right-8 z-45 bg-[#25D366] text-white border-2 border-obsidian p-4 rounded-full shadow-2xl hover:bg-emerald-600 transition-colors cursor-pointer brutalist-shadow-dark flex items-center justify-center gap-2 group"
+          >
+            <span className="font-tag text-xs font-black uppercase hidden group-hover:inline-block tracking-wider pl-1 text-white">
+              Tanya Admin
+            </span>
+            <MessageCircle className="w-7 h-7 fill-current stroke-none text-white" />
+          </button>
+        )}
 
 
 
-          {!isDashboard && (
-            <Suspense fallback={null}>
-              <Navbar
-                cartCount={cartCount}
-                onCartClick={() => setIsCartOpen(true)}
-                currentPath={currentPath}
-              />
-            </Suspense>
-          )}
+        {!isDashboard && (
+          <Suspense fallback={null}>
+            <Navbar
+              cartCount={cartCount}
+              onCartClick={() => setIsCartOpen(true)}
+              currentPath={currentPath}
+            />
+          </Suspense>
+        )}
 
-          <main ref={contentRef} className="route-content">
+        <main ref={contentRef} className="route-content">
           {isDashboard ? (
             // /dashboard and sub-paths: show login if unauthenticated on sub-paths
             currentPath === '/madfatdashboard' || localStorage.getItem('madfat_admin_auth') === 'true' ? (
@@ -1035,7 +1025,7 @@ export default function App() {
               {/* Get In Touch Form Section */}
               <section className="mx-6 md:mx-12 max-w-7xl lg:mx-auto mb-20 relative overflow-hidden select-none" id="kontak">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-                  
+
                   {/* Left Column: CTA Info */}
                   <div className="lg:col-span-6 flex flex-col items-center text-center lg:items-start lg:text-left">
                     <h3 className="animate-pop-in font-hero text-4xl sm:text-5xl md:text-5.5xl font-black text-obsidian uppercase leading-[1.05] tracking-tight mb-6">
@@ -1054,14 +1044,14 @@ export default function App() {
                         KIRIM PESAN
                       </h4>
 
-                      <form 
+                      <form
                         onSubmit={(e) => {
                           e.preventDefault();
                           const formData = new FormData(e.currentTarget);
                           const name = formData.get('name') as string;
                           const email = formData.get('email') as string;
                           const msg = formData.get('message') as string;
-                          
+
                           const adminWhatsAppNumber = '6281234567890';
                           const message = `Halo Admin Madfat!\n\nNama: ${name}\nEmail/Kontak: ${email}\nDetail Kebutuhan: ${msg}`;
                           window.open(`https://wa.me/${adminWhatsAppNumber}?text=${encodeURIComponent(message)}`, '_blank');
@@ -1070,31 +1060,31 @@ export default function App() {
                       >
                         <div className="flex flex-col gap-1.5">
                           <label className="font-hero text-xs font-bold text-obsidian uppercase tracking-wide">Nama Lengkap</label>
-                          <input 
-                            type="text" 
-                            name="name" 
-                            required 
+                          <input
+                            type="text"
+                            name="name"
+                            required
                             placeholder="Contoh: John Doe"
                             className="px-4 py-2.5 bg-white border border-gray-300 rounded-lg outline-none focus:border-blaze-orange transition-colors text-obsidian"
                           />
                         </div>
-                        
+
                         <div className="flex flex-col gap-1.5">
                           <label className="font-hero text-xs font-bold text-obsidian uppercase tracking-wide">Alamat Email</label>
-                          <input 
-                            type="email" 
-                            name="email" 
-                            required 
+                          <input
+                            type="email"
+                            name="email"
+                            required
                             placeholder="Contoh: john@domain.com"
                             className="px-4 py-2.5 bg-white border border-gray-300 rounded-lg outline-none focus:border-blaze-orange transition-colors text-obsidian"
                           />
                         </div>
-                        
+
                         <div className="flex flex-col gap-1.5">
                           <label className="font-hero text-xs font-bold text-obsidian uppercase tracking-wide">Detail Pesan / Paket Kebutuhan</label>
-                          <textarea 
-                            name="message" 
-                            required 
+                          <textarea
+                            name="message"
+                            required
                             rows={3}
                             placeholder="Ceritakan gambaran singkat tentang bisnis Anda..."
                             className="px-4 py-2.5 bg-white border border-gray-300 rounded-lg outline-none focus:border-blaze-orange transition-colors text-obsidian resize-none"
@@ -1129,21 +1119,21 @@ export default function App() {
               window.location.href = '/';
             }} />
           )}
-          </main>
+        </main>
 
-          <Suspense fallback={null}>
-            <Cart
-              isOpen={isCartOpen}
-              onClose={() => setIsCartOpen(false)}
-              cartItems={cartItems}
-              onUpdateQuantity={handleUpdateQuantity}
-              onUpdateNotes={handleUpdateNotes}
-              onRemoveItem={handleRemoveItem}
-              onClearCart={handleClearCart}
-              triggerNotification={triggerNotification}
-            />
-          </Suspense>
-        </div>
-      </>
+        <Suspense fallback={null}>
+          <Cart
+            isOpen={isCartOpen}
+            onClose={() => setIsCartOpen(false)}
+            cartItems={cartItems}
+            onUpdateQuantity={handleUpdateQuantity}
+            onUpdateNotes={handleUpdateNotes}
+            onRemoveItem={handleRemoveItem}
+            onClearCart={handleClearCart}
+            triggerNotification={triggerNotification}
+          />
+        </Suspense>
+      </div>
+    </>
   );
 }
