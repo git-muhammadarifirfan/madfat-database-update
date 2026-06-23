@@ -98,19 +98,27 @@ function Cart({
 
     setIsSubmitting(true);
 
-    // Generate sequential order ID (#001, #002, ...) based on existing transaction count
+    // Generate a unique random 6-digit order ID (e.g. #382910)
     let orderId: string;
+    const generateRandomId = () => {
+      return `#${Math.floor(100000 + Math.random() * 900000)}`;
+    };
+
     const sheetsUrl = getSheetsUrl();
     if (sheetsUrl) {
       try {
         const existing = await fetchTransactionsFromSheets(sheetsUrl);
-        const nextNum = (existing.length || 0) + 1;
-        orderId = `#${String(nextNum).padStart(3, '0')}`;
+        const existingIds = new Set((existing || []).map(tx => tx.orderId));
+        let attempts = 0;
+        do {
+          orderId = generateRandomId();
+          attempts++;
+        } while (existingIds.has(orderId) && attempts < 100);
       } catch {
-        orderId = `#${Date.now().toString().slice(-4)}`; // fallback
+        orderId = generateRandomId(); // fallback
       }
     } else {
-      orderId = `#${Date.now().toString().slice(-4)}`;
+      orderId = generateRandomId();
     }
     const dateStr = new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
 
