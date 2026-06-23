@@ -339,6 +339,27 @@ export async function updateTransactionStatusInSheets(
   });
 }
 
+export async function deleteTransactionInSheets(
+  apiUrl: string,
+  password: string,
+  pin: string,
+  id: string
+): Promise<void> {
+  await fetch(apiUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'text/plain;charset=utf-8',
+    },
+    body: JSON.stringify({
+      action: 'delete',
+      password,
+      pin,
+      sheetName: 'Transactions',
+      id,
+    }),
+  });
+}
+
 // Fetches Website Packages from Google Sheets
 export async function fetchWebsitePackagesFromSheets(apiUrl: string): Promise<any[]> {
   try {
