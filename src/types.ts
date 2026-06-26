@@ -1,7 +1,12 @@
+export interface Category {
+  id: string;
+  name: string;
+}
+
 export interface DigitalProduct {
   id: string;
   name: string;
-  category: 'streaming' | 'gaming' | 'education' | 'other';
+  category: string;
   price: number;
   sub: string;
   description: string;
@@ -10,6 +15,7 @@ export interface DigitalProduct {
   hot?: boolean;
   bestSeller?: boolean;
   image?: string;
+  isOutOfStock?: boolean;
 }
 
 export interface WebsitePackage {
@@ -23,6 +29,7 @@ export interface WebsitePackage {
   badge?: string;
   categoryName: string;
   btnText?: string;
+  isOutOfStock?: boolean;
 }
 
 export interface CartItem {

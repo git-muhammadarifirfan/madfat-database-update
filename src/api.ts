@@ -1,4 +1,4 @@
-import { DigitalProduct } from './types';
+import { DigitalProduct, Category } from './types';
 
 // Simple Base64 decoder to prevent plain-text scanner bots from harvesting default endpoints
 function decodeCredential(obfuscated: string): string {
@@ -123,7 +123,8 @@ export async function fetchProductsFromSheets(apiUrl: string): Promise<DigitalPr
             color: (getRowValue(item, ['color']) || 'bg-blue-600').toString(),
             hot: getRowValue(item, ['hot']) === true || getRowValue(item, ['hot']) === 'true' || getRowValue(item, ['hot']) === 1 || getRowValue(item, ['hot']) === '1',
             bestSeller: getRowValue(item, ['bestSeller', 'bestseller']) === true || getRowValue(item, ['bestSeller', 'bestseller']) === 'true' || getRowValue(item, ['bestSeller', 'bestseller']) === 1 || getRowValue(item, ['bestSeller', 'bestseller']) === '1',
-            image: getRowValue(item, ['image', 'imageUrl']).toString()
+            image: getRowValue(item, ['image', 'imageUrl']).toString(),
+            isOutOfStock: getRowValue(item, ['isOutOfStock', 'isoutofstock', 'outOfStock', 'outofstock']) === true || getRowValue(item, ['isOutOfStock', 'isoutofstock', 'outOfStock', 'outofstock']) === 'true' || getRowValue(item, ['isOutOfStock', 'isoutofstock', 'outOfStock', 'outofstock']) === 1 || getRowValue(item, ['isOutOfStock', 'isoutofstock', 'outOfStock', 'outofstock']) === '1'
           };
         })
         .filter(item => item.id && item.id.trim() !== '');
@@ -399,7 +400,8 @@ export async function fetchWebsitePackagesFromSheets(apiUrl: string): Promise<an
             features: parsedFeatures,
             isFeatured: getRowValue(pkg, ['isFeatured', 'isfeatured']) === true || getRowValue(pkg, ['isFeatured', 'isfeatured']) === 'true' || getRowValue(pkg, ['isFeatured', 'isfeatured']) === 1 || getRowValue(pkg, ['isFeatured', 'isfeatured']) === '1',
             badge: getRowValue(pkg, ['badge']).toString(),
-            btnText: getRowValue(pkg, ['btnText', 'btntext']).toString()
+            btnText: getRowValue(pkg, ['btnText', 'btntext']).toString(),
+            isOutOfStock: getRowValue(pkg, ['isOutOfStock', 'isoutofstock', 'outOfStock', 'outofstock']) === true || getRowValue(pkg, ['isOutOfStock', 'isoutofstock', 'outOfStock', 'outofstock']) === 'true' || getRowValue(pkg, ['isOutOfStock', 'isoutofstock', 'outOfStock', 'outofstock']) === 1 || getRowValue(pkg, ['isOutOfStock', 'isoutofstock', 'outOfStock', 'outofstock']) === '1'
           };
         })
         // Schema guard: WebsitePackages MUST have categoryName OR priceText.
@@ -563,3 +565,75 @@ export async function updateAdminEmailInSheets(
   }
   return response.json();
 }
+
+// Fetches Categories from Google Sheets
+export async function fetchCategoriesFromSheets(apiUrl: string): Promise<Category[]> {
+  try {
+    const response = await fetch(`${apiUrl}?sheet=Categories`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch categories from Google Sheets');
+    }
+    const result = await response.json();
+    if (result.status === 'success') {
+      const data = Array.isArray(result.data) ? result.data : [];
+      return data
+        .map((item: any) => {
+          return {
+            id: getRowValue(item, ['id', 'categoryId']).toString(),
+            name: getRowValue(item, ['name', 'categoryName']).toString()
+          };
+        })
+        .filter(item => item.id && item.id.trim() !== '');
+    } else {
+      return [];
+    }
+  } catch (e) {
+    console.error('Error fetching categories:', e);
+    return [];
+  }
+}
+
+// Saves or updates a Category in Google Sheets
+export async function upsertCategoryInSheets(
+  apiUrl: string,
+  password: string,
+  pin: string,
+  category: Category
+): Promise<void> {
+  await fetch(apiUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'text/plain;charset=utf-8',
+    },
+    body: JSON.stringify({
+      action: 'upsert',
+      password,
+      pin,
+      sheetName: 'Categories',
+      product: category,
+    }),
+  });
+}
+
+// Deletes a Category in Google Sheets
+export async function deleteCategoryInSheets(
+  apiUrl: string,
+  password: string,
+  pin: string,
+  id: string
+): Promise<void> {
+  await fetch(apiUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'text/plain;charset=utf-8',
+    },
+    body: JSON.stringify({
+      action: 'delete',
+      password,
+      pin,
+      sheetName: 'Categories',
+      id,
+    }),
+  });
+}
+
