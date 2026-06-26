@@ -69,14 +69,6 @@ function bindLiquidButton(button: LiquidButton) {
   if (button.__madfatLiquidCleanup) return;
 
   const { liquid } = ensureLiquidLayer(button);
-  const textTargets = getTextTargets(button);
-
-  // Store original computed colors of elements to safely animate back to them
-  const originalColors = new Map<HTMLElement, string>();
-  originalColors.set(button, window.getComputedStyle(button).color || '');
-  textTargets.forEach((target) => {
-    originalColors.set(target, window.getComputedStyle(target).color || '');
-  });
 
   gsap.set(liquid, {
     xPercent: -50,
@@ -88,6 +80,17 @@ function bindLiquidButton(button: LiquidButton) {
 
   const enter = () => {
     const { fill, text } = resolveLiquidStyle(button);
+    const textTargets = getTextTargets(button);
+
+    // Store original computed colors of elements to safely animate back to them
+    if (!button.dataset.origColor) {
+      button.dataset.origColor = window.getComputedStyle(button).color || '';
+    }
+    textTargets.forEach((target) => {
+      if (!target.dataset.origColor) {
+        target.dataset.origColor = window.getComputedStyle(target).color || '';
+      }
+    });
 
     button.classList.add('is-liquid-hover');
     gsap.set(liquid, { backgroundColor: fill });
@@ -119,6 +122,7 @@ function bindLiquidButton(button: LiquidButton) {
   };
 
   const leave = () => {
+    const textTargets = getTextTargets(button);
     button.classList.remove('is-liquid-hover');
 
     gsap.to(liquid, {
@@ -140,7 +144,7 @@ function bindLiquidButton(button: LiquidButton) {
 
     // Animate each text target back to its original color, then clear inline style
     [button, ...textTargets].forEach((target) => {
-      const origColor = originalColors.get(target) || '';
+      const origColor = target.dataset.origColor || '';
       gsap.to(target, {
         color: origColor,
         duration: 0.18,
@@ -184,6 +188,7 @@ function bindLiquidButton(button: LiquidButton) {
     button.removeEventListener('mousedown', down);
     button.removeEventListener('mouseup', up);
     button.removeEventListener('blur', leave);
+    const textTargets = getTextTargets(button);
     gsap.killTweensOf([button, liquid, ...textTargets]);
     delete button.__madfatLiquidCleanup;
   };
