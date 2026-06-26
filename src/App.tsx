@@ -9,8 +9,8 @@ gsap.registerPlugin(ScrollTrigger);
 
 import { DIGITAL_PRODUCTS, WEBSITE_PACKAGES, FAQ_ITEMS } from './data';
 import { useGsapLiquidButtons } from './hooks/useGsapLiquidButtons';
-import { DigitalProduct, WebsitePackage, CartItem } from './types';
-import { fetchProductsFromSheets, fetchWebsitePackagesFromSheets, DEFAULT_SHEETS_URL } from './api';
+import { DigitalProduct, WebsitePackage, CartItem, Category } from './types';
+import { fetchProductsFromSheets, fetchWebsitePackagesFromSheets, fetchCategoriesFromSheets, DEFAULT_SHEETS_URL } from './api';
 
 // Lazy load components for code splitting
 const Navbar = React.lazy(() => import('./components/Navbar'));
@@ -453,6 +453,24 @@ export default function App() {
       return WEBSITE_PACKAGES;
     }
   });
+  const [categories, setCategories] = useState<Category[]>(() => {
+    try {
+      const cached = localStorage.getItem('madfat_cached_categories');
+      return cached ? JSON.parse(cached) : [
+        { id: 'streaming', name: 'Streaming' },
+        { id: 'gaming', name: 'Gaming' },
+        { id: 'education', name: 'Education / AI' },
+        { id: 'other', name: 'Other' }
+      ];
+    } catch {
+      return [
+        { id: 'streaming', name: 'Streaming' },
+        { id: 'gaming', name: 'Gaming' },
+        { id: 'education', name: 'Education / AI' },
+        { id: 'other', name: 'Other' }
+      ];
+    }
+  });
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [notification, setNotification] = useState<{ show: boolean; text: string; type?: 'success' | 'error' } | null>(null);
@@ -504,10 +522,23 @@ export default function App() {
     }
   }, []);
 
+  const fetchCategories = useCallback(async () => {
+    const sheetsUrl = localStorage.getItem('madfat_sheets_url') || import.meta.env.VITE_SHEETS_API_URL || DEFAULT_SHEETS_URL;
+    if (!sheetsUrl) return;
+    try {
+      const data = await fetchCategoriesFromSheets(sheetsUrl);
+      if (data && data.length > 0) {
+        setCategories(data);
+        localStorage.setItem('madfat_cached_categories', JSON.stringify(data));
+      }
+    } catch (error) {
+      console.error('Error fetching categories from Google Sheets:', error);
+    }
+  }, []);
 
   const refreshAllData = useCallback(async () => {
-    await Promise.all([fetchProducts(), fetchWebsitePackages()]);
-  }, [fetchProducts, fetchWebsitePackages]);
+    await Promise.all([fetchProducts(), fetchWebsitePackages(), fetchCategories()]);
+  }, [fetchProducts, fetchWebsitePackages, fetchCategories]);
 
   useEffect(() => {
     if (!currentPath.startsWith('/dashboard')) {
@@ -904,6 +935,8 @@ export default function App() {
                   setProducts={setProducts}
                   websitePackages={websitePackages}
                   setWebsitePackages={setWebsitePackages}
+                  categories={categories}
+                  setCategories={setCategories}
                   onRefresh={refreshAllData}
                   formatPrice={formatPrice}
                   currentPath={currentPath}
@@ -922,6 +955,7 @@ export default function App() {
             <Suspense fallback={<LoadingFallback />}>
               <DigitalProductPage
                 products={products}
+                categories={categories}
                 onAddToCart={handleAddToCart}
                 formatPrice={formatPrice}
               />
