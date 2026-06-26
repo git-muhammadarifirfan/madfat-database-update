@@ -95,9 +95,9 @@ export default function DigitalCatalog({
   };
 
   return (
-    <section 
+    <section
       ref={containerRef}
-      className="bg-[#fff8f2] py-20 px-6 md:px-12 group relative overflow-hidden" 
+      className="bg-[#fff8f2] py-20 px-6 md:px-12 group relative overflow-hidden"
       id="digital"
     >
 
@@ -178,7 +178,7 @@ export default function DigitalCatalog({
                 {/* Footer (for Desktop) */}
                 <div className="hidden sm:flex items-center justify-between pt-4 border-t-2 border-dashed border-[#dfc0b3] w-full">
                   <div>
-                    <span className="font-tag text-[9px] font-bold text-[#8C8A87] block uppercase">Harga Mulai</span>
+                    <span className="font-tag text-[9px] font-bold text-[#8C8A87] block uppercase">Harga</span>
                     <span className="font-tag text-lg font-bold text-blaze-orange italic">
                       {formatPrice(product.price)}
                     </span>

@@ -132,8 +132,8 @@ export default function DigitalProductPage({
     const matchesCategory = activeCategory === 'all' || (() => {
       const cat = categories.find(c => c.id === activeCategory);
       if (!cat) return p.category === activeCategory;
-      return p.category.toLowerCase() === cat.id.toLowerCase() || 
-             p.category.toLowerCase() === cat.name.toLowerCase();
+      return p.category.toLowerCase() === cat.id.toLowerCase() ||
+        p.category.toLowerCase() === cat.name.toLowerCase();
     })();
     // When searchQuery is empty, show all products regardless
     if (!searchQuery.trim()) return matchesCategory;
@@ -144,8 +144,8 @@ export default function DigitalProductPage({
   const activeCategories = categories.filter(cat => {
     return products.some(p => {
       if (p.isOutOfStock) return false;
-      return p.category.toLowerCase() === cat.id.toLowerCase() || 
-             p.category.toLowerCase() === cat.name.toLowerCase();
+      return p.category.toLowerCase() === cat.id.toLowerCase() ||
+        p.category.toLowerCase() === cat.name.toLowerCase();
     });
   });
 
@@ -274,7 +274,7 @@ export default function DigitalProductPage({
                 {/* Footer (for Desktop) */}
                 <div className="hidden sm:flex items-center justify-between pt-4 border-t-2 border-dashed border-[#dfc0b3] w-full">
                   <div>
-                    <span className="font-tag text-[9px] font-bold text-[#8C8A87] block uppercase">Harga Mulai</span>
+                    <span className="font-tag text-[9px] font-bold text-[#8C8A87] block uppercase">Harga</span>
                     <span className="font-tag text-lg font-bold text-blaze-orange italic">
                       {formatPrice(product.price)}
                     </span>
