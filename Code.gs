@@ -61,10 +61,21 @@ function doGet(e) {
     }
 
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const sheet = ss.getSheetByName(sheetName);
+    let sheet = ss.getSheetByName(sheetName);
 
     if (!sheet) {
-      return jsonResponse({ status: "error", message: "Sheet '" + sheetName + "' tidak ditemukan." });
+      sheet = ss.insertSheet(sheetName);
+      if (sheetName === "Categories") {
+        sheet.appendRow(["id", "name"]);
+      } else if (sheetName === "Products") {
+        sheet.appendRow(["id", "name", "category", "price", "sub", "description", "icon", "color", "hot", "bestSeller", "image", "isOutOfStock"]);
+      } else if (sheetName === "WebsitePackages") {
+        sheet.appendRow(["id", "name", "priceText", "price", "sub", "features", "isFeatured", "badge", "categoryName", "btnText", "isOutOfStock"]);
+      } else if (sheetName === "Transactions") {
+        sheet.appendRow(["orderId", "customerName", "customerEmail", "items", "totalAmount", "status", "createdAt"]);
+      } else if (sheetName === "Settings") {
+        sheet.appendRow(["key", "value"]);
+      }
     }
 
     const data = sheet.getDataRange().getValues();
@@ -88,7 +99,7 @@ function doGet(e) {
           }
 
           // Tipe boolean
-          if (header === "hot" || header === "bestSeller" || header === "isFeatured") {
+          if (header === "hot" || header === "bestSeller" || header === "isFeatured" || header === "isOutOfStock") {
             val = val === true || val === "TRUE" || val === "true" || val === 1;
           }
 
@@ -361,10 +372,21 @@ function doPost(e) {
   if (action === "upsert") {
     try {
       const targetSheetName = sheetName || "Products";
-      const targetSheet = ss.getSheetByName(targetSheetName);
+      let targetSheet = ss.getSheetByName(targetSheetName);
 
       if (!targetSheet) {
-        return jsonResponse({ status: "error", message: "Sheet '" + targetSheetName + "' tidak ditemukan." });
+        targetSheet = ss.insertSheet(targetSheetName);
+        if (targetSheetName === "Categories") {
+          targetSheet.appendRow(["id", "name"]);
+        } else if (targetSheetName === "Products") {
+          targetSheet.appendRow(["id", "name", "category", "price", "sub", "description", "icon", "color", "hot", "bestSeller", "image", "isOutOfStock"]);
+        } else if (targetSheetName === "WebsitePackages") {
+          targetSheet.appendRow(["id", "name", "priceText", "price", "sub", "features", "isFeatured", "badge", "categoryName", "btnText", "isOutOfStock"]);
+        } else if (targetSheetName === "Transactions") {
+          targetSheet.appendRow(["orderId", "customerName", "customerEmail", "items", "totalAmount", "status", "createdAt"]);
+        } else if (targetSheetName === "Settings") {
+          targetSheet.appendRow(["key", "value"]);
+        }
       }
 
       const data = targetSheet.getDataRange().getValues();
@@ -389,7 +411,7 @@ function doPost(e) {
         }
 
         // Boolean → TRUE/FALSE string
-        if (header === "hot" || header === "bestSeller" || header === "isFeatured") {
+        if (header === "hot" || header === "bestSeller" || header === "isFeatured" || header === "isOutOfStock") {
           val = val === true || val === "true" || val === 1 ? "TRUE" : "FALSE";
         }
 
@@ -415,10 +437,17 @@ function doPost(e) {
   if (action === "delete") {
     try {
       const targetSheetName = sheetName || "Products";
-      const targetSheet = ss.getSheetByName(targetSheetName);
+      let targetSheet = ss.getSheetByName(targetSheetName);
 
       if (!targetSheet) {
-        return jsonResponse({ status: "error", message: "Sheet '" + targetSheetName + "' tidak ditemukan." });
+        targetSheet = ss.insertSheet(targetSheetName);
+        if (targetSheetName === "Categories") {
+          targetSheet.appendRow(["id", "name"]);
+        } else if (targetSheetName === "Products") {
+          targetSheet.appendRow(["id", "name", "category", "price", "sub", "description", "icon", "color", "hot", "bestSeller", "image", "isOutOfStock"]);
+        } else if (targetSheetName === "WebsitePackages") {
+          targetSheet.appendRow(["id", "name", "priceText", "price", "sub", "features", "isFeatured", "badge", "categoryName", "btnText", "isOutOfStock"]);
+        }
       }
 
       const data = targetSheet.getDataRange().getValues();
