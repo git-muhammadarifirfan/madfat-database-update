@@ -3,9 +3,9 @@ import {
   Plus, Edit2, Trash2, Save, X, Upload, LogOut, Key, Settings, Loader,
   ArrowLeft, Printer, FileText, CheckCircle, RefreshCw, BarChart2, Shield,
   Lock, CreditCard, LayoutDashboard, ShoppingBag, Globe, AlertTriangle, Menu,
-  Eye, EyeOff, DollarSign, Clock, TrendingUp
+  Eye, EyeOff, DollarSign, Clock, TrendingUp, Copy
 } from 'lucide-react';
-import { DigitalProduct, WebsitePackage } from '../types';
+import { DigitalProduct, WebsitePackage, Category } from '../types';
 import {
   compressImageToWebP,
   uploadImageToImgbb,
@@ -25,7 +25,9 @@ import {
   sendResetOtpInSheets,
   resetPasswordOtpInSheets,
   updateAdminEmailInSheets,
-  verifyAdminPassword
+  verifyAdminPassword,
+  upsertCategoryInSheets,
+  deleteCategoryInSheets
 } from '../api';
 
 interface AdminDashboardProps {
@@ -33,6 +35,8 @@ interface AdminDashboardProps {
   setProducts?: React.Dispatch<React.SetStateAction<DigitalProduct[]>>;
   websitePackages: WebsitePackage[];
   setWebsitePackages?: React.Dispatch<React.SetStateAction<WebsitePackage[]>>;
+  categories: Category[];
+  setCategories?: React.Dispatch<React.SetStateAction<Category[]>>;
   onRefresh: () => Promise<void>;
   formatPrice: (value: number) => string;
   onClose: () => void;
@@ -82,10 +86,11 @@ const CuteSmiley = ({ className }: { className?: string }) => (
 );
 
 // ── URL → Tab mapping ──────────────────────────────────────
-type TabType = 'dashboard' | 'products' | 'packages' | 'orders' | 'settings';
+type TabType = 'dashboard' | 'products' | 'categories' | 'packages' | 'orders' | 'settings';
 
 function getTabFromPath(path: string): TabType {
   if (path === '/madfatdashboard/products') return 'products';
+  if (path === '/madfatdashboard/categories') return 'categories';
   if (path === '/madfatdashboard/packages') return 'packages';
   if (path === '/madfatdashboard/orders') return 'orders';
   if (path === '/madfatdashboard/settings') return 'settings';
@@ -120,11 +125,22 @@ function getNextPackageId(existingPackages: WebsitePackage[]): string {
   return `bundle-${String(next).padStart(3, '0')}`;
 }
 
+function getNextCategoryId(existingCategories: Category[]): string {
+  const nums = existingCategories.map(c => {
+    const m = c.id.match(/(\d+)$/);
+    return m ? parseInt(m[1], 10) : 0;
+  });
+  const next = nums.length > 0 ? Math.max(...nums) + 1 : 1;
+  return `cat-${String(next).padStart(3, '0')}`;
+}
+
 export default function AdminDashboard({
   products,
   setProducts,
   websitePackages,
   setWebsitePackages,
+  categories,
+  setCategories,
   onRefresh,
   formatPrice,
   onClose,
@@ -145,9 +161,11 @@ export default function AdminDashboard({
     setSelectedProductIds([]);
     setSelectedPackageIds([]);
     setSelectedOrderIds([]);
+    setSelectedCategoryIds([]);
     setIsProductBulkMode(false);
     setIsPackageBulkMode(false);
     setIsOrderBulkMode(false);
+    setIsCategoryBulkMode(false);
   };
 
   // Security Verification
@@ -198,6 +216,8 @@ export default function AdminDashboard({
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
   const [isPackageModalOpen, setIsPackageModalOpen] = useState<boolean>(false);
   const [editingPackage, setEditingPackage] = useState<any | null>(null);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState<boolean>(false);
+  const [editingCategory, setEditingCategory] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [uploadingImage, setUploadingImage] = useState<boolean>(false);
 
@@ -205,9 +225,11 @@ export default function AdminDashboard({
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [selectedPackageIds, setSelectedPackageIds] = useState<string[]>([]);
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [isProductBulkMode, setIsProductBulkMode] = useState<boolean>(false);
   const [isPackageBulkMode, setIsPackageBulkMode] = useState<boolean>(false);
   const [isOrderBulkMode, setIsOrderBulkMode] = useState<boolean>(false);
+  const [isCategoryBulkMode, setIsCategoryBulkMode] = useState<boolean>(false);
 
   // Mobile Navigation Drawer Toggle
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
@@ -230,7 +252,7 @@ export default function AdminDashboard({
     isOpen: boolean;
     title: string;
     message: string;
-    actionType: 'delete_product' | 'delete_package' | 'delete_order' | 'save_settings' | 'change_pin' | 'reveal_sheets_url' | 'reveal_imgbb_key' | 'logout' | 'bulk_delete_products' | 'bulk_delete_packages' | 'bulk_delete_orders';
+    actionType: 'delete_product' | 'delete_package' | 'delete_order' | 'save_settings' | 'change_pin' | 'reveal_sheets_url' | 'reveal_imgbb_key' | 'logout' | 'bulk_delete_products' | 'bulk_delete_packages' | 'bulk_delete_orders' | 'delete_category' | 'bulk_delete_categories';
     targetId?: string;
     payload?: any;
   } | null>(null);
@@ -247,6 +269,12 @@ export default function AdminDashboard({
       setSelectedPackageIds([]);
     }
   }, [isPackageBulkMode]);
+
+  useEffect(() => {
+    if (!isCategoryBulkMode) {
+      setSelectedCategoryIds([]);
+    }
+  }, [isCategoryBulkMode]);
 
   useEffect(() => {
     if (!isOrderBulkMode) {
@@ -569,7 +597,7 @@ export default function AdminDashboard({
   const triggerStrictAction = (
     title: string,
     message: string,
-    actionType: 'delete_product' | 'delete_package' | 'delete_order' | 'save_settings' | 'change_pin' | 'reveal_sheets_url' | 'reveal_imgbb_key' | 'logout' | 'bulk_delete_products' | 'bulk_delete_packages' | 'bulk_delete_orders',
+    actionType: 'delete_product' | 'delete_package' | 'delete_order' | 'save_settings' | 'change_pin' | 'reveal_sheets_url' | 'reveal_imgbb_key' | 'logout' | 'bulk_delete_products' | 'bulk_delete_packages' | 'bulk_delete_orders' | 'delete_category' | 'bulk_delete_categories',
     targetId?: string,
     payload?: any
   ) => {
@@ -613,6 +641,18 @@ export default function AdminDashboard({
           console.error(err);
           triggerNotification('Sinkronisasi hapus produk gagal!', 'error');
         });
+      } else if (actionType === 'delete_category' && targetId) {
+        if (setCategories) {
+          setCategories(prev => prev.filter(c => c.id !== targetId));
+        }
+        triggerNotification('Kategori berhasil dihapus!', 'success');
+        setIsLoading(false);
+        deleteCategoryInSheets(sheetsUrl, adminPassword, adminPinCode, targetId).then(() => {
+          onRefresh();
+        }).catch(err => {
+          console.error(err);
+          triggerNotification('Sinkronisasi hapus kategori gagal!', 'error');
+        });
       } else if (actionType === 'delete_package' && targetId) {
         if (setWebsitePackages) {
           setWebsitePackages(prev => prev.filter(p => p.id !== targetId));
@@ -646,6 +686,23 @@ export default function AdminDashboard({
         (async () => {
           for (let i = 0; i < ids.length; i++) {
             await deleteProductInSheets(sheetsUrl, adminPassword, adminPinCode, ids[i]);
+          }
+          onRefresh();
+        })().catch(err => {
+          console.error(err);
+          triggerNotification('Sinkronisasi hapus masal gagal!', 'error');
+        });
+      } else if (actionType === 'bulk_delete_categories' && payload?.ids) {
+        const ids = payload.ids as string[];
+        if (setCategories) {
+          setCategories(prev => prev.filter(c => !ids.includes(c.id)));
+        }
+        setSelectedCategoryIds([]);
+        triggerNotification(`${ids.length} kategori berhasil dihapus!`, 'success');
+        setIsLoading(false);
+        (async () => {
+          for (let i = 0; i < ids.length; i++) {
+            await deleteCategoryInSheets(sheetsUrl, adminPassword, adminPinCode, ids[i]);
           }
           onRefresh();
         })().catch(err => {
@@ -811,6 +868,102 @@ export default function AdminDashboard({
     } catch (err: any) {
       console.error(err);
       triggerNotification('Gagal mensinkronisasikan paket website!', 'error');
+    }
+  };
+
+  // Category CRUD saves
+  const handleSaveCategorySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCategory) return;
+    const adminPassword = localStorage.getItem('madfat_admin_password') || password;
+    const adminPinCode = localStorage.getItem('madfat_admin_pin') || pin;
+
+    const catToSave = { ...editingCategory };
+
+    // Optimistic UI Update
+    if (setCategories) {
+      setCategories(prev => {
+        const exists = prev.some(c => c.id === catToSave.id);
+        if (exists) {
+          return prev.map(c => c.id === catToSave.id ? catToSave : c);
+        } else {
+          return [...prev, catToSave];
+        }
+      });
+    }
+    setIsCategoryModalOpen(false);
+    setEditingCategory(null);
+    triggerNotification('Kategori berhasil disimpan!', 'success');
+
+    try {
+      await upsertCategoryInSheets(sheetsUrl, adminPassword, adminPinCode, catToSave);
+      onRefresh();
+    } catch (err: any) {
+      console.error(err);
+      triggerNotification('Gagal mensinkronisasikan kategori!', 'error');
+    }
+  };
+
+  // Duplication & Stock Toggle handlers
+  const handleDuplicateProduct = (product: DigitalProduct) => {
+    const duplicated = {
+      ...product,
+      id: getNextProductId(products),
+      name: product.name.endsWith(' (Copy)') ? product.name : `${product.name} (Copy)`
+    };
+    setEditingProduct(duplicated);
+    setIsProductModalOpen(true);
+  };
+
+  const handleToggleProductStock = async (product: DigitalProduct) => {
+    const adminPassword = localStorage.getItem('madfat_admin_password') || password;
+    const adminPinCode = localStorage.getItem('madfat_admin_pin') || pin;
+    const updated = { ...product, isOutOfStock: !product.isOutOfStock };
+    
+    if (setProducts) {
+      setProducts(prev => prev.map(p => p.id === product.id ? updated : p));
+    }
+    triggerNotification(
+      `${product.name} sekarang ${updated.isOutOfStock ? 'Habis (Out of Stock)' : 'Tersedia (In Stock)'}!`,
+      'success'
+    );
+    try {
+      await upsertProductInSheets(sheetsUrl, adminPassword, adminPinCode, updated);
+      onRefresh();
+    } catch (err) {
+      console.error(err);
+      triggerNotification('Gagal memperbarui status stok!', 'error');
+    }
+  };
+
+  const handleDuplicatePackage = (pkg: WebsitePackage) => {
+    const duplicated = {
+      ...pkg,
+      id: getNextPackageId(websitePackages),
+      name: pkg.name.endsWith(' (Copy)') ? pkg.name : `${pkg.name} (Copy)`
+    };
+    setEditingPackage(duplicated);
+    setIsPackageModalOpen(true);
+  };
+
+  const handleTogglePackageStock = async (pkg: WebsitePackage) => {
+    const adminPassword = localStorage.getItem('madfat_admin_password') || password;
+    const adminPinCode = localStorage.getItem('madfat_admin_pin') || pin;
+    const updated = { ...pkg, isOutOfStock: !pkg.isOutOfStock };
+    
+    if (setWebsitePackages) {
+      setWebsitePackages(prev => prev.map(p => p.id === pkg.id ? updated : p));
+    }
+    triggerNotification(
+      `Paket ${pkg.name} sekarang ${updated.isOutOfStock ? 'Habis (Out of Stock)' : 'Tersedia (In Stock)'}!`,
+      'success'
+    );
+    try {
+      await upsertWebsitePackageInSheets(sheetsUrl, adminPassword, adminPinCode, updated);
+      onRefresh();
+    } catch (err) {
+      console.error(err);
+      triggerNotification('Gagal memperbarui status stok!', 'error');
     }
   };
 
@@ -1149,6 +1302,7 @@ export default function AdminDashboard({
             {[
               { id: 'dashboard', label: 'Ringkasan', icon: LayoutDashboard },
               { id: 'products', label: 'Produk Digital', icon: ShoppingBag },
+              { id: 'categories', label: 'Kategori', icon: FileText },
               { id: 'packages', label: 'Paket Website', icon: Globe },
               { id: 'orders', label: 'Manajemen Order', icon: CreditCard },
               { id: 'settings', label: 'Pengaturan', icon: Settings },
@@ -1485,6 +1639,7 @@ export default function AdminDashboard({
                         <th className="p-3.5 font-semibold uppercase text-slate-500 tracking-wider text-[10px]">Harga</th>
                         <th className="p-3.5 font-semibold uppercase text-slate-500 tracking-wider text-[10px]">Sub / Tag</th>
                         <th className="p-3.5 font-semibold uppercase text-slate-500 tracking-wider text-[10px]">Deskripsi</th>
+                        <th className="p-3.5 font-semibold uppercase text-slate-500 tracking-wider text-[10px]">Stok</th>
                         <th className="p-3.5 font-semibold uppercase text-slate-500 tracking-wider text-[10px]">Promosi</th>
                         <th className="p-3.5 font-semibold uppercase text-slate-500 tracking-wider text-[10px] text-center">Aksi</th>
                       </tr>
@@ -1525,6 +1680,18 @@ export default function AdminDashboard({
                           <td className="p-3 font-bold text-blaze-orange font-mono">{formatPrice(product.price)}</td>
                           <td className="p-3 text-slate-500 font-medium max-w-[120px] truncate">{product.sub}</td>
                           <td className="p-3 text-slate-500 font-medium max-w-[200px] truncate">{product.description}</td>
+                          <td className="p-3">
+                            <button
+                              onClick={() => handleToggleProductStock(product)}
+                              className={`px-2.5 py-1 rounded-full text-[9px] font-bold border transition-all cursor-pointer whitespace-nowrap ${
+                                product.isOutOfStock
+                                  ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
+                                  : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
+                              }`}
+                            >
+                              {product.isOutOfStock ? 'OUT OF STOCK' : 'IN STOCK'}
+                            </button>
+                          </td>
                           <td className="p-3 space-x-1">
                             {product.hot && <span className="bg-red-500 text-white text-[8px] font-bold px-2 py-0.5 rounded-full border border-orange-200">HOT</span>}
                             {product.bestSeller && <span className="bg-yellow-500 text-obsidian text-[8px] font-bold px-2 py-0.5 rounded-full border border-orange-200">BEST</span>}
@@ -1532,11 +1699,18 @@ export default function AdminDashboard({
                           <td className="p-3 text-center">
                             <div className="flex items-center justify-center gap-1.5">
                               <button
+                                onClick={() => handleDuplicateProduct(product)}
+                                title="Duplikasi Produk"
+                                className="p-2 bg-slate-50 border border-slate-200 rounded-xl hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all cursor-pointer shadow-sm active:scale-95"
+                              >
+                                <Copy className="w-3.5 h-3.5" />
+                              </button>
+                              <button
                                 onClick={() => {
                                   setEditingProduct({ ...product });
                                   setIsProductModalOpen(true);
                                 }}
-                                className="p-2 bg-slate-50 border border-slate-200 rounded-xl hover:bg-blaze-orange hover:text-white hover:border-blaze-orange transition-all cursor-pointer shadow-sm"
+                                className="p-2 bg-slate-50 border border-slate-200 rounded-xl hover:bg-blaze-orange hover:text-white hover:border-blaze-orange transition-all cursor-pointer shadow-sm active:scale-95"
                               >
                                 <Edit2 className="w-3.5 h-3.5" />
                               </button>
@@ -1547,7 +1721,7 @@ export default function AdminDashboard({
                                   'delete_product',
                                   product.id
                                 )}
-                                className="p-2 bg-slate-50 border border-slate-200 rounded-xl hover:bg-red-500 hover:text-white hover:border-red-500 transition-all cursor-pointer shadow-sm"
+                                className="p-2 bg-slate-50 border border-slate-200 rounded-xl hover:bg-red-500 hover:text-white hover:border-red-500 transition-all cursor-pointer shadow-sm active:scale-95"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -1606,6 +1780,12 @@ export default function AdminDashboard({
                           </div>
                           <div className="flex gap-2">
                             <button
+                              onClick={() => handleDuplicateProduct(product)}
+                              className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-semibold uppercase hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all cursor-pointer flex items-center gap-1 shadow-sm"
+                            >
+                              <Copy className="w-3.5 h-3.5" /> Copy
+                            </button>
+                            <button
                               onClick={() => {
                                   setEditingProduct({ ...product });
                                   setIsProductModalOpen(true);
@@ -1620,6 +1800,183 @@ export default function AdminDashboard({
                                 `Apakah Anda yakin ingin menghapus "${product.name}"? Aksi ini tidak dapat dibatalkan di database Google Sheets.`,
                                 'delete_product',
                                 product.id
+                              )}
+                              className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-semibold uppercase hover:bg-red-500 hover:text-white hover:border-red-500 transition-all cursor-pointer flex items-center gap-1 shadow-sm"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" /> Hapus
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* TAB: CATEGORIES MANAGEMENT */}
+        {activeTab === 'categories' && (
+          <div className="space-y-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h1 className="font-hero text-2xl sm:text-3xl font-bold text-slate-800 uppercase tracking-tight">MANAJEMEN KATEGORI</h1>
+                <p className="font-sans text-xs text-slate-500 font-medium mt-1">Kelola kategori produk digital yang terhubung ke katalog.</p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2.5">
+                <button
+                  onClick={() => setIsCategoryBulkMode(!isCategoryBulkMode)}
+                  className={`px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold uppercase transition-all duration-200 shadow-sm cursor-pointer ${
+                    isCategoryBulkMode
+                      ? 'bg-amber-50 border-amber-200 text-amber-800'
+                      : 'bg-white hover:bg-slate-50 text-slate-700'
+                  }`}
+                >
+                  {isCategoryBulkMode ? 'Selesai Bulk' : 'Aksi Massal'}
+                </button>
+
+                <button
+                  onClick={() => {
+                    setEditingCategory({
+                      id: getNextCategoryId(categories),
+                      name: ''
+                    });
+                    setIsCategoryModalOpen(true);
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 bg-blaze-orange hover:bg-blaze-orange/90 text-white rounded-xl text-xs font-semibold uppercase transition-all duration-200 shadow-sm cursor-pointer disabled:opacity-50"
+                >
+                  <Plus className="w-4 h-4" /> Tambah Kategori Baru
+                </button>
+              </div>
+            </div>
+
+            {categories.length === 0 ? (
+              <div className="bg-white border border-slate-100 rounded-2xl p-12 text-center shadow-sm">
+                <p className="text-xs text-slate-500 font-semibold uppercase">Belum ada kategori.</p>
+              </div>
+            ) : (
+              <>
+                {/* Desktop View */}
+                <div className="hidden md:block overflow-x-auto rounded-2xl bg-white border border-slate-100 shadow-sm">
+                  <table className="w-full border-collapse text-left text-xs font-sans text-obsidian">
+                    <thead>
+                      <tr className="bg-slate-50 text-slate-500 border-b border-slate-100">
+                        {isCategoryBulkMode && (
+                          <th className="p-3.5 text-center w-12">
+                            <input
+                              type="checkbox"
+                              className="w-4 h-4 rounded border border-slate-200 text-blaze-orange focus:ring-0 focus:ring-offset-0 cursor-pointer accent-blaze-orange"
+                              checked={categories.length > 0 && selectedCategoryIds.length === categories.length}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedCategoryIds(categories.map(c => c.id));
+                                } else {
+                                  setSelectedCategoryIds([]);
+                                }
+                              }}
+                            />
+                          </th>
+                        )}
+                        <th className="p-3.5 font-semibold uppercase text-slate-500 tracking-wider text-[10px] w-32">Kategori ID</th>
+                        <th className="p-3.5 font-semibold uppercase text-slate-500 tracking-wider text-[10px]">Nama Kategori</th>
+                        <th className="p-3.5 font-semibold uppercase text-slate-500 tracking-wider text-[10px] text-center w-40">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {categories.map((cat) => (
+                        <tr key={cat.id} className="hover:bg-slate-50/60 transition-colors">
+                          {isCategoryBulkMode && (
+                            <td className="p-3 text-center w-12">
+                              <input
+                                type="checkbox"
+                                className="w-4 h-4 rounded border border-slate-200 text-blaze-orange focus:ring-0 focus:ring-offset-0 cursor-pointer accent-blaze-orange"
+                                checked={selectedCategoryIds.includes(cat.id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedCategoryIds(prev => [...prev, cat.id]);
+                                  } else {
+                                    setSelectedCategoryIds(prev => prev.filter(id => id !== cat.id));
+                                  }
+                                }}
+                              />
+                            </td>
+                          )}
+                          <td className="p-3 font-mono font-semibold text-slate-400">{cat.id}</td>
+                          <td className="p-3 font-semibold text-slate-700 uppercase">{cat.name}</td>
+                          <td className="p-3 text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button
+                                onClick={() => {
+                                  setEditingCategory({ ...cat });
+                                  setIsCategoryModalOpen(true);
+                                }}
+                                className="p-2 bg-slate-50 border border-slate-200 rounded-xl hover:bg-blaze-orange hover:text-white hover:border-blaze-orange transition-all cursor-pointer shadow-sm active:scale-95"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => triggerStrictAction(
+                                  'HAPUS KATEGORI?',
+                                  `Apakah Anda yakin ingin menghapus kategori "${cat.name}"? Aksi ini tidak dapat dibatalkan di database Google Sheets.`,
+                                  'delete_category',
+                                  cat.id
+                                )}
+                                className="p-2 bg-slate-50 border border-slate-200 rounded-xl hover:bg-red-500 hover:text-white hover:border-red-500 transition-all cursor-pointer shadow-sm active:scale-95"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile View */}
+                <div className="block md:hidden space-y-4">
+                  {categories.map((cat) => (
+                    <div key={cat.id} className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm flex items-start gap-4">
+                      {isCategoryBulkMode && (
+                        <div className="pt-1.5 shrink-0">
+                          <input
+                            type="checkbox"
+                            className="w-5 h-5 rounded border border-slate-200 text-blaze-orange focus:ring-0 focus:ring-offset-0 cursor-pointer accent-blaze-orange"
+                            checked={selectedCategoryIds.includes(cat.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedCategoryIds(prev => [...prev, cat.id]);
+                              } else {
+                                setSelectedCategoryIds(prev => prev.filter(id => id !== cat.id));
+                              }
+                            }}
+                          />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-xs font-semibold text-slate-400">{cat.id}</span>
+                        </div>
+                        <h4 className="font-bold text-sm text-slate-700 uppercase truncate">{cat.name}</h4>
+                        <div className="flex items-center justify-end pt-2 border-t border-dashed border-slate-100">
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                setEditingCategory({ ...cat });
+                                setIsCategoryModalOpen(true);
+                              }}
+                              className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-semibold uppercase hover:bg-blaze-orange hover:text-white hover:border-blaze-orange transition-all cursor-pointer flex items-center gap-1 shadow-sm"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" /> Edit
+                            </button>
+                            <button
+                              onClick={() => triggerStrictAction(
+                                'HAPUS KATEGORI?',
+                                `Apakah Anda yakin ingin menghapus kategori "${cat.name}"? Aksi ini tidak dapat dibatalkan di database Google Sheets.`,
+                                'delete_category',
+                                cat.id
                               )}
                               className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-semibold uppercase hover:bg-red-500 hover:text-white hover:border-red-500 transition-all cursor-pointer flex items-center gap-1 shadow-sm"
                             >
@@ -1752,6 +2109,18 @@ export default function AdminDashboard({
                             {Array.isArray(pkg.features) ? pkg.features.join(', ') : (typeof pkg.features === 'string' ? pkg.features : '')}
                           </td>
                           <td className="p-3">
+                            <button
+                              onClick={() => handleTogglePackageStock(pkg)}
+                              className={`px-2.5 py-1 rounded-full text-[9px] font-bold border transition-all cursor-pointer whitespace-nowrap ${
+                                pkg.isOutOfStock
+                                  ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
+                                  : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
+                              }`}
+                            >
+                              {pkg.isOutOfStock ? 'OUT OF STOCK' : 'IN STOCK'}
+                            </button>
+                          </td>
+                          <td className="p-3">
                             {pkg.isFeatured ? (
                               <span className="bg-yellow-50 text-yellow-700 text-[9px] font-semibold px-2.5 py-0.5 rounded-full border border-yellow-200">TRUE</span>
                             ) : (
@@ -1763,11 +2132,18 @@ export default function AdminDashboard({
                           <td className="p-3 text-center">
                             <div className="flex items-center justify-center gap-1.5">
                               <button
+                                onClick={() => handleDuplicatePackage(pkg)}
+                                title="Duplikasi Paket"
+                                className="p-2 bg-slate-50 border border-slate-200 rounded-xl hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all cursor-pointer shadow-sm active:scale-95"
+                              >
+                                <Copy className="w-3.5 h-3.5" />
+                              </button>
+                              <button
                                 onClick={() => {
                                   setEditingPackage({ ...pkg });
                                   setIsPackageModalOpen(true);
                                 }}
-                                className="p-2 bg-slate-50 border border-slate-200 rounded-xl hover:bg-blaze-orange hover:text-white hover:border-blaze-orange transition-all cursor-pointer shadow-sm"
+                                className="p-2 bg-slate-50 border border-slate-200 rounded-xl hover:bg-blaze-orange hover:text-white hover:border-blaze-orange transition-all cursor-pointer shadow-sm active:scale-95"
                               >
                                 <Edit2 className="w-3.5 h-3.5" />
                               </button>
@@ -1778,7 +2154,7 @@ export default function AdminDashboard({
                                   'delete_package',
                                   pkg.id
                                 )}
-                                className="p-2 bg-slate-50 border border-slate-200 rounded-xl hover:bg-red-500 hover:text-white hover:border-red-500 transition-all cursor-pointer shadow-sm"
+                                className="p-2 bg-slate-50 border border-slate-200 rounded-xl hover:bg-red-500 hover:text-white hover:border-red-500 transition-all cursor-pointer shadow-sm active:scale-95"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -1838,6 +2214,12 @@ export default function AdminDashboard({
                             {pkg.badge && <span className="bg-orange-50/50 text-blaze-orange text-[8px] font-semibold px-2 py-0.5 rounded-full">{pkg.badge}</span>}
                           </div>
                           <div className="flex gap-2">
+                            <button
+                              onClick={() => handleDuplicatePackage(pkg)}
+                              className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-semibold uppercase hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all cursor-pointer flex items-center gap-1 shadow-sm"
+                            >
+                              <Copy className="w-3.5 h-3.5" /> Copy
+                            </button>
                             <button
                               onClick={() => {
                                 setEditingPackage({ ...pkg });
@@ -2377,16 +2759,15 @@ export default function AdminDashboard({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-650 uppercase mb-1">Kategori</label>
+                  <label className="block text-xs font-semibold text-slate-655 uppercase mb-1">Kategori</label>
                   <select
-                    value={editingProduct.category || 'streaming'}
+                    value={editingProduct.category || (categories[0]?.id || '')}
                     onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value as any })}
                     className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-850 bg-white focus:outline-none focus:ring-2 focus:ring-blaze-orange/20 focus:border-blaze-orange"
                   >
-                    <option value="streaming">Streaming</option>
-                    <option value="gaming">Gaming</option>
-                    <option value="education">Education</option>
-                    <option value="other">Other</option>
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
                   </select>
                 </div>
 
@@ -2445,7 +2826,7 @@ export default function AdminDashboard({
                 />
               </div>
 
-              <div className="flex gap-4 py-1">
+              <div className="flex flex-wrap gap-4 py-1">
                 <label className="flex items-center gap-2 text-xs font-semibold uppercase cursor-pointer select-none text-slate-700">
                   <input
                     type="checkbox"
@@ -2463,6 +2844,15 @@ export default function AdminDashboard({
                     className="accent-blaze-orange w-4 h-4 rounded border-slate-300 focus:ring-blaze-orange/20"
                   />
                   Tandai sebagai Best Seller
+                </label>
+                <label className="flex items-center gap-2 text-xs font-semibold uppercase cursor-pointer select-none text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={!!editingProduct.isOutOfStock}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, isOutOfStock: e.target.checked })}
+                    className="accent-blaze-orange w-4 h-4 rounded border-slate-300 focus:ring-blaze-orange/20"
+                  />
+                  Stok Habis (Out of Stock)
                 </label>
               </div>
 
@@ -2603,7 +2993,7 @@ export default function AdminDashboard({
                 />
               </div>
 
-              <div className="py-1">
+               <div className="py-1 flex gap-4">
                 <label className="flex items-center gap-2 text-xs font-semibold uppercase cursor-pointer select-none text-slate-700">
                   <input
                     type="checkbox"
@@ -2612,6 +3002,15 @@ export default function AdminDashboard({
                     className="accent-blaze-orange w-4 h-4 rounded border-slate-300 focus:ring-blaze-orange/20"
                   />
                   Tandai Paket Unggulan (Featured)
+                </label>
+                <label className="flex items-center gap-2 text-xs font-semibold uppercase cursor-pointer select-none text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={!!editingPackage.isOutOfStock}
+                    onChange={(e) => setEditingPackage({ ...editingPackage, isOutOfStock: e.target.checked })}
+                    className="accent-blaze-orange w-4 h-4 rounded border-slate-300 focus:ring-blaze-orange/20"
+                  />
+                  Stok Habis (Out of Stock)
                 </label>
               </div>
 
@@ -2628,13 +3027,68 @@ export default function AdminDashboard({
       )}
 
       {/* -------------------------------------------------------------
+          MODAL: ADD/EDIT CATEGORY
+         ------------------------------------------------------------- */}
+      {isCategoryModalOpen && editingCategory && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-6 overflow-y-auto">
+          <div className="w-full max-w-md bg-white border-t sm:border border-slate-100 rounded-t-3xl sm:rounded-2xl p-5 sm:p-6 shadow-xl relative my-0 sm:my-8 max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6 border-b border-slate-100 pb-3">
+              <h2 className="font-hero text-sm font-semibold text-slate-850 uppercase">
+                {editingCategory.name ? 'UBAH DATA KATEGORI' : 'TAMBAH KATEGORI BARU'}
+              </h2>
+              <button
+                onClick={() => setIsCategoryModalOpen(false)}
+                className="p-1.5 rounded-xl text-slate-500 hover:text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveCategorySubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-650 uppercase mb-1">Kategori ID</label>
+                <input
+                  type="text"
+                  required
+                  value={editingCategory.id || ''}
+                  onChange={(e) => setEditingCategory({ ...editingCategory, id: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 font-mono bg-white focus:outline-none focus:ring-2 focus:ring-blaze-orange/20 focus:border-blaze-orange"
+                  placeholder="Contoh: streaming"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-650 uppercase mb-1">Nama Kategori</label>
+                <input
+                  type="text"
+                  required
+                  value={editingCategory.name || ''}
+                  onChange={(e) => setEditingCategory({ ...editingCategory, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blaze-orange/20 focus:border-blaze-orange"
+                  placeholder="Contoh: Streaming"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-2.5 bg-blaze-orange hover:bg-blaze-orange/90 text-white rounded-xl text-xs font-semibold tracking-wider uppercase transition-all duration-200 shadow-sm cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
+              >
+                <Save className="w-4 h-4" /> {isLoading ? 'MENYIMPAN...' : 'Simpan Data Kategori'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* -------------------------------------------------------------
           FLOATING BULK ACTIONS BAR
          ------------------------------------------------------------- */}
-      {(selectedProductIds.length > 0 || selectedPackageIds.length > 0) && (
+      {(selectedProductIds.length > 0 || selectedPackageIds.length > 0 || selectedCategoryIds.length > 0) && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] w-[calc(100%-2rem)] max-w-md bg-white border border-slate-100 p-4 rounded-2xl shadow-xl flex items-center justify-between gap-4 animate-in fade-in slide-in-from-bottom-4 duration-200">
           <div className="flex flex-col">
             <span className="font-hero text-xs font-semibold text-slate-800 uppercase">
-              {selectedProductIds.length > 0 ? `${selectedProductIds.length} Produk` : `${selectedPackageIds.length} Paket`} Terpilih
+              {selectedProductIds.length > 0 ? `${selectedProductIds.length} Produk` : selectedPackageIds.length > 0 ? `${selectedPackageIds.length} Paket` : `${selectedCategoryIds.length} Kategori`} Terpilih
             </span>
             <span className="text-[10px] text-slate-400 font-semibold uppercase mt-0.5">Aksi Massal Terpilih</span>
           </div>
@@ -2643,8 +3097,10 @@ export default function AdminDashboard({
               onClick={() => {
                 setSelectedProductIds([]);
                 setSelectedPackageIds([]);
+                setSelectedCategoryIds([]);
                 setIsProductBulkMode(false);
                 setIsPackageBulkMode(false);
+                setIsCategoryBulkMode(false);
               }}
               className="px-3 py-1.5 border border-slate-200 text-slate-650 rounded-xl hover:bg-slate-50 text-[10px] font-semibold uppercase cursor-pointer transition-colors"
             >
@@ -2668,11 +3124,19 @@ export default function AdminDashboard({
                     undefined,
                     { ids: selectedPackageIds }
                   );
+                } else if (selectedCategoryIds.length > 0) {
+                  triggerStrictAction(
+                    'HAPUS BULK KATEGORI?',
+                    `Apakah Anda yakin ingin menghapus ${selectedCategoryIds.length} kategori terpilih? Tindakan ini akan menghapus data permanen di Google Sheets.`,
+                    'bulk_delete_categories',
+                    undefined,
+                    { ids: selectedCategoryIds }
+                  );
                 }
               }}
               className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-[10px] font-semibold uppercase cursor-pointer transition-colors shadow-sm"
             >
-              Hapus ({selectedProductIds.length > 0 ? selectedProductIds.length : selectedPackageIds.length})
+              Hapus ({selectedProductIds.length > 0 ? selectedProductIds.length : selectedPackageIds.length > 0 ? selectedPackageIds.length : selectedCategoryIds.length})
             </button>
           </div>
         </div>
