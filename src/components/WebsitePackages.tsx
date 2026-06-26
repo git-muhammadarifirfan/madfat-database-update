@@ -15,7 +15,7 @@ export default function WebsitePackages({
   onDirectWhatsApp
 }: WebsitePackagesProps) {
   // Use the first 5 packages
-  const activePackages = websitePackages.slice(0, 5);
+  const activePackages = websitePackages.filter(pkg => !pkg.isOutOfStock).slice(0, 5);
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
   const currentTargetScrollRef = React.useRef<number | null>(null);

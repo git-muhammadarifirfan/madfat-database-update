@@ -128,7 +128,7 @@ export default function DigitalCatalog({
 
         {/* Grid Products - Limited to 4 items */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {products.slice(0, 4).map((product) => {
+          {products.filter(p => !p.isOutOfStock).slice(0, 4).map((product) => {
             return (
               <div
                 key={product.id}
@@ -157,7 +157,7 @@ export default function DigitalCatalog({
 
                 {/* Middle part in mobile (Texts) */}
                 <div className="flex-1 min-w-0 pr-6 sm:pr-0">
-                  <h3 className="font-hero text-sm sm:text-lg font-bold text-obsidian mb-0.5 truncate">
+                  <h3 className="font-hero text-sm sm:text-lg font-bold text-obsidian mb-0.5 whitespace-normal break-words">
                     {product.name}
                   </h3>
                   <p className="font-tag text-[9px] sm:text-[10px] font-bold text-[#8C8A87] mb-1 sm:mb-3 uppercase tracking-wider truncate">

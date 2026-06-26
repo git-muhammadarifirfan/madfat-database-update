@@ -300,7 +300,7 @@ export default function WebsiteDetailsPage({
 
         {/* Compact Package Cards Grid */}
         <div ref={scrollContainerRef} className="flex flex-row md:flex-wrap md:justify-center overflow-x-auto md:overflow-x-visible snap-x snap-mandatory no-scrollbar pb-6 px-4 -mx-4 md:mx-auto md:px-0 gap-6 md:max-w-[920px]">
-          {websitePackages.map((pkg, i) => {
+          {websitePackages.filter(pkg => !pkg.isOutOfStock).map((pkg, i) => {
             const isOrange = i % 2 === 0;
             const displayTitle = pkg.name.includes(':') ? pkg.name.split(':')[1].trim() : pkg.name;
             return (

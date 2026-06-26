@@ -1,20 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Plus, Tv, Music, Gamepad, GraduationCap, Sparkles, ArrowLeft, Search } from 'lucide-react';
 import { gsap } from 'gsap';
-import { DigitalProduct } from '../types';
+import { DigitalProduct, Category } from '../types';
 
 interface DigitalProductPageProps {
   products: DigitalProduct[];
+  categories: Category[];
   onAddToCart: (product: DigitalProduct) => void;
   formatPrice: (value: number) => string;
 }
 
 export default function DigitalProductPage({
   products,
+  categories,
   onAddToCart,
   formatPrice
 }: DigitalProductPageProps) {
-  const [activeCategory, setActiveCategory] = useState<'all' | 'streaming' | 'gaming' | 'education'>('all');
+  const [activeCategory, setActiveCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -126,18 +128,30 @@ export default function DigitalProductPage({
   }, [searchQuery]);
 
   const filteredProducts = products.filter(p => {
-    const matchesCategory = activeCategory === 'all' || p.category === activeCategory;
+    if (p.isOutOfStock) return false;
+    const matchesCategory = activeCategory === 'all' || (() => {
+      const cat = categories.find(c => c.id === activeCategory);
+      if (!cat) return p.category === activeCategory;
+      return p.category.toLowerCase() === cat.id.toLowerCase() || 
+             p.category.toLowerCase() === cat.name.toLowerCase();
+    })();
     // When searchQuery is empty, show all products regardless
     if (!searchQuery.trim()) return matchesCategory;
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
-  const categories: { id: 'all' | 'streaming' | 'gaming' | 'education'; label: string }[] = [
+  const activeCategories = categories.filter(cat => {
+    return products.some(p => {
+      if (p.isOutOfStock) return false;
+      return p.category.toLowerCase() === cat.id.toLowerCase() || 
+             p.category.toLowerCase() === cat.name.toLowerCase();
+    });
+  });
+
+  const filterCategories = [
     { id: 'all', label: 'SEMUA' },
-    { id: 'streaming', label: 'STREAMING' },
-    { id: 'gaming', label: 'GAMING' },
-    { id: 'education', label: 'EDUCATION / AI' }
+    ...activeCategories.slice(0, 8).map(c => ({ id: c.id, label: c.name.toUpperCase() }))
   ];
 
   const handleBackToHome = (e: React.MouseEvent) => {
@@ -176,7 +190,7 @@ export default function DigitalProductPage({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 select-none">
           {/* Filter Categories */}
           <div className="flex flex-wrap gap-3 order-2 md:order-1">
-            {categories.map(cat => (
+            {filterCategories.map(cat => (
               <button
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id)}
@@ -239,7 +253,7 @@ export default function DigitalProductPage({
 
                 {/* Middle part in mobile (Texts) */}
                 <div className="flex-1 min-w-0 pr-6 sm:pr-0">
-                  <h3 className="font-hero text-sm sm:text-lg font-bold text-obsidian mb-0.5 truncate">
+                  <h3 className="font-hero text-sm sm:text-lg font-bold text-obsidian mb-0.5 whitespace-normal break-words">
                     {product.name}
                   </h3>
                   <p className="font-tag text-[9px] sm:text-[10px] font-bold text-[#8C8A87] mb-1 sm:mb-3 uppercase tracking-wider truncate">
