@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef, Suspense } from 'react';
-import { MessageCircle, ArrowRight } from 'lucide-react';
+import { MessageCircle, ArrowRight, X } from 'lucide-react';
 import Lenis from 'lenis';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -85,6 +85,12 @@ const RedShieldDoodle = (props: React.SVGProps<SVGSVGElement>) => (
     <path d="M 38 26 L 58 26 L 58 48 C 58 56 48 62 48 62 C 48 62 38 56 38 48 Z" fill="none" stroke="#1C1E1C" strokeWidth="3" strokeLinejoin="round" />
     {/* Exclamation point */}
     <text x="48" y="43" fill="#1C1E1C" fontSize="16" fontWeight="950" textAnchor="middle" fontFamily="system-ui, -apple-system, sans-serif">!</text>
+  </svg>
+);
+
+const DiscordIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+    <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z" />
   </svg>
 );
 
@@ -474,6 +480,7 @@ export default function App() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [notification, setNotification] = useState<{ show: boolean; text: string; type?: 'success' | 'error' } | null>(null);
+  const [isChatMenuOpen, setIsChatMenuOpen] = useState(false);
   const [currentPath, setCurrentPath] = useState(initialPath);
   const [isAdmin, setIsAdmin] = useState(false);
   const contentRef = useRef<HTMLElement>(null);
@@ -902,15 +909,50 @@ export default function App() {
         )}
 
         {!isDashboard && (
-          <button
-            onClick={handleDirectWhatsApp}
-            className="fixed bottom-8 right-8 z-45 bg-[#25D366] text-white border-2 border-obsidian p-4 rounded-full shadow-2xl hover:bg-emerald-600 transition-colors cursor-pointer brutalist-shadow-dark flex items-center justify-center gap-2 group"
-          >
-            <span className="font-tag text-xs font-black uppercase hidden group-hover:inline-block tracking-wider pl-1 text-white">
-              Tanya Admin
-            </span>
-            <MessageCircle className="w-7 h-7 fill-current stroke-none text-white" />
-          </button>
+          <div className="fixed bottom-8 right-8 z-45 flex flex-col items-end gap-3">
+            {/* Chat Menu Popup */}
+            {isChatMenuOpen && (
+              <div className="bg-white border-2 border-obsidian p-2 rounded-2xl shadow-xl flex flex-col gap-2 min-w-[160px] animate-slide-up-fade origin-bottom-right">
+                <button
+                  onClick={handleDirectWhatsApp}
+                  className="flex items-center gap-3 w-full p-2.5 hover:bg-[#25D366]/10 rounded-xl transition-colors text-left group cursor-pointer"
+                >
+                  <div className="bg-[#25D366] p-2 rounded-full text-white group-hover:scale-110 transition-transform flex items-center justify-center">
+                    <MessageCircle className="w-5 h-5 fill-current stroke-none" />
+                  </div>
+                  <span className="font-sans text-sm font-bold text-obsidian">WhatsApp</span>
+                </button>
+                <button
+                  onClick={() => {
+                    const discordUsername = 'dotfourty4';
+                    // Web direct link to discord user
+                    window.open('https://discord.com/users/681860497313628160', '_blank');
+                  }}
+                  className="flex items-center gap-3 w-full p-2.5 hover:bg-[#5865F2]/10 rounded-xl transition-colors text-left group cursor-pointer"
+                >
+                  <div className="bg-[#5865F2] p-2 rounded-full text-white group-hover:scale-110 transition-transform flex items-center justify-center">
+                    <DiscordIcon className="w-5 h-5" />
+                  </div>
+                  <span className="font-sans text-sm font-bold text-obsidian">Discord</span>
+                </button>
+              </div>
+            )}
+            
+            {/* Main Toggle Button */}
+            <button
+              onClick={() => setIsChatMenuOpen(!isChatMenuOpen)}
+              className="bg-[#25D366] text-white border-2 border-obsidian p-4 rounded-full shadow-2xl hover:bg-emerald-600 transition-colors cursor-pointer brutalist-shadow-dark flex items-center justify-center gap-2 group"
+            >
+              <span className="font-tag text-xs font-black uppercase hidden group-hover:inline-block tracking-wider pl-1 text-white">
+                {isChatMenuOpen ? 'Tutup' : 'Tanya Admin'}
+              </span>
+              {isChatMenuOpen ? (
+                <X className="w-7 h-7 stroke-current" />
+              ) : (
+                <MessageCircle className="w-7 h-7 fill-current stroke-none text-white" />
+              )}
+            </button>
+          </div>
         )}
 
 

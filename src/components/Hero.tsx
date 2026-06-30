@@ -24,9 +24,9 @@ function Hero({ onDirectWhatsApp, products }: HeroProps) {
     }).format(value);
   };
 
-  const spotifyProduct = products.find(p => p.id === 'spotify') || { name: 'Spotify Family', sub: 'Individual Plan 12 Bulan', price: 45000, image: 'https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg' };
-  const netflixProduct = products.find(p => p.id === 'netflix') || { name: 'Netflix Premium', sub: 'UHD 4K + Anti Screen Limit', price: 35000, image: 'https://upload.wikimedia.org/wikipedia/commons/0/0c/Netflix_2015_N_logo.svg' };
-  const disneyProduct = products.find(p => p.id === 'disney-hotstar') || { name: 'Disney+ Hotstar', sub: 'Akun Privat 1 Bulan', price: 25000, image: 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Disney%2B_Hotstar_logo.svg' };
+  const spotifyProduct = products.find(p => p.id === 'prod-002' || p.id === 'spotify' || p.name.toLowerCase().includes('spotify')) || { name: 'Spotify Family', sub: 'Individual Plan 12 Bulan', price: 45000, image: 'https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg' };
+  const netflixProduct = products.find(p => p.id === 'prod-001' || p.id === 'netflix' || p.name.toLowerCase().includes('netflix')) || { name: 'Netflix Premium', sub: 'UHD 4K + Anti Screen Limit', price: 35000, image: 'https://upload.wikimedia.org/wikipedia/commons/0/0c/Netflix_2015_N_logo.svg' };
+  const aiProduct = products.find(p => p.id === 'prod-016' || p.id === 'chatgpt-plus' || p.category === 'education' || p.category === 'cat-003' || p.id.toLowerCase().includes('chatgpt') || p.name.toLowerCase().includes('chatgpt') || p.id.toLowerCase().includes('canva') || p.name.toLowerCase().includes('canva')) || { name: 'ChatGPT Plus', sub: 'Shared / 30 Hari Aktif', price: 110000, image: 'https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg' };
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -89,6 +89,7 @@ function Hero({ onDirectWhatsApp, products }: HeroProps) {
         '-=0.55'
       );
 
+      // Playful bouncy pop-in for the cards
       tl.fromTo('.hero-card-netflix',
         { scale: 0, rotate: 25, opacity: 0, y: -50 },
         { scale: 1, rotate: 12, opacity: 1, y: 0, ease: 'back.out(2.0)', duration: 0.75, transformOrigin: 'center center' },
@@ -264,24 +265,24 @@ function Hero({ onDirectWhatsApp, products }: HeroProps) {
               <span className="font-bricolage text-[#FF7A30] text-xl font-normal">{formatPrice(netflixProduct.price)}</span>
             </div>
 
-            {/* Disney+ Hotstar card - Bottom & Middle */}
+            {/* AI card (ChatGPT/Canva) - Bottom & Middle */}
             <div
               className="hero-card-disney absolute top-[260px] left-[20px] w-[260px] p-6 bg-white rounded-3xl border-2 border-obsidian shadow-[8px_8px_0px_0px_#FF7A30] cursor-pointer"
               style={{ transform: 'rotate(12deg)', zIndex: 20, willChange: 'transform' }}
               onMouseEnter={(e) => handleCardHover(e.currentTarget, 12)}
               onMouseLeave={(e) => handleCardReset(e.currentTarget, 12, 20)}
             >
-              {/* Disney+ Hotstar Logo Space - Disney Blue */}
-              <div className="w-[52px] h-[52px] bg-[#0063e5] border-2 border-obsidian rounded-full mb-5 flex items-center justify-center overflow-hidden">
+              {/* AI Logo Space */}
+              <div className="w-[52px] h-[52px] bg-[#10a37f] border-2 border-obsidian rounded-full mb-5 flex items-center justify-center overflow-hidden">
                 <img
-                  src={disneyProduct.image || "https://upload.wikimedia.org/wikipedia/commons/a/a4/Disney%2B_Hotstar_logo.svg"}
-                  alt={disneyProduct.name}
-                  className="w-full h-full object-cover"
+                  src={aiProduct.image || "https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg"}
+                  alt={aiProduct.name}
+                  className="w-full h-full object-cover animate-spin-slow"
                 />
               </div>
-              <h3 className="font-hero text-lg font-normal text-obsidian mb-0.5">{disneyProduct.name}</h3>
-              <p className="font-sans text-xs text-[#8C8A87] mb-4 leading-tight">{disneyProduct.sub}</p>
-              <span className="font-bricolage text-[#FF7A30] text-xl font-normal">{formatPrice(disneyProduct.price)}</span>
+              <h3 className="font-hero text-lg font-normal text-obsidian mb-0.5">{aiProduct.name}</h3>
+              <p className="font-sans text-xs text-[#8C8A87] mb-4 leading-tight">{aiProduct.sub}</p>
+              <span className="font-bricolage text-[#FF7A30] text-xl font-normal">{formatPrice(aiProduct.price)}</span>
             </div>
           </div>
 
