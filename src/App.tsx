@@ -924,9 +924,7 @@ export default function App() {
                 </button>
                 <button
                   onClick={() => {
-                    const discordUsername = 'dotfourty4';
-                    // Web direct link to discord user
-                    window.open('https://discord.com/users/681860497313628160', '_blank');
+                    window.open('https://discord.gg/h2HR5x297V', '_blank');
                   }}
                   className="flex items-center gap-3 w-full p-2.5 hover:bg-[#5865F2]/10 rounded-xl transition-colors text-left group cursor-pointer"
                 >
