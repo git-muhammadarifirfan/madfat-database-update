@@ -1020,7 +1020,7 @@ export default function App() {
           ) : currentPath === '/' || currentPath === '' || currentPath.startsWith('/#') ? (
             <>
               <Suspense fallback={<LoadingFallback />}>
-                <Hero onDirectWhatsApp={handleDirectWhatsApp} products={sortedProducts} />
+                <Hero onDirectWhatsApp={handleDirectWhatsApp} products={products} />
               </Suspense>
 
               <Suspense fallback={null}>
@@ -1029,7 +1029,7 @@ export default function App() {
 
               <Suspense fallback={<LoadingFallback />}>
                 <DigitalCatalog
-                  products={sortedProducts}
+                  products={products}
                   onAddToCart={handleAddToCart}
                   formatPrice={formatPrice}
                 />
