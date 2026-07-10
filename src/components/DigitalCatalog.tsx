@@ -89,8 +89,8 @@ export default function DigitalCatalog({
   };
 
   const handleBusinessWhatsApp = () => {
-    const adminWhatsAppNumber = '6281234567890';
-    const message = `Halo Admin Madfat! Saya tertarik dengan penawaran Kustom Order & Kebutuhan Bisnis/Bulk untuk akun digital. Mohon info detailnya.`;
+    const adminWhatsAppNumber = '6289672300222';
+    const message = `Halo! Saya mau beli\n\nNama Buyer : \nNama Aplikasi : Akun Digital (Bulk)\nProduk yang dibeli : Kustom Order / Bulk\nJumlah Produk : 1\nBukti payment : `;
     window.open(`https://wa.me/${adminWhatsAppNumber}?text=${encodeURIComponent(message)}`, '_blank');
   };
 

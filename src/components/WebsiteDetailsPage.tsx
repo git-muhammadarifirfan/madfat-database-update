@@ -408,7 +408,7 @@ export default function WebsiteDetailsPage({
           </p>
           <button
             onClick={() => {
-              const adminWhatsAppNumber = '6281234567890';
+              const adminWhatsAppNumber = '6289672300222';
               const message = 'Halo Admin Madfat! Saya ingin berkonsultasi mengenai pembuatan website dengan fitur dan sistem kustom khusus.';
               window.open(`https://wa.me/${adminWhatsAppNumber}?text=${encodeURIComponent(message)}`, '_blank');
             }}

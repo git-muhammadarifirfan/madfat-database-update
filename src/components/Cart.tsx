@@ -56,32 +56,17 @@ function Cart({
   }, []);
 
   const sendWhatsAppForInvoice = useCallback((inv: any, items: typeof cartItems) => {
-    const adminWhatsAppNumber = '6281234567890';
+    const adminWhatsAppNumber = '6289672300222';
 
-    let message = `*KONFIRMASI PESANAN MADFAT* ⚡\n`;
-    message += `===============================\n`;
-    message += `🧾 No Order: *${inv.orderId}*\n`;
-    message += `👤 Nama: ${inv.customerName}\n`;
-    message += `📧 Email: ${inv.customerEmail}\n`;
-    message += `📅 Tanggal: ${inv.createdAt} WIB\n`;
-    message += `===============================\n\n`;
-    message += `*Rincian Pesanan:*\n`;
-
-    items.forEach((item, index) => {
-      message += `${index + 1}. *${item.product.name}* (${item.quantity}x)\n`;
-      if (item.notes.trim()) {
-        message += `   • Catatan: _"${item.notes.trim()}"_\n`;
-      }
-      message += `   • Subtotal: ${formatPrice(item.product.price * item.quantity)}\n\n`;
-    });
-
-    message += `===============================\n`;
-    message += `*TOTAL:* *${formatPrice(inv.totalAmount)}*\n`;
-    message += `===============================\n\n`;
-    message += `Mohon konfirmasi pesanan saya ya admin. Terima kasih! 🙏`;
+    let message = `Halo! Saya mau beli\n\n`;
+    message += `Nama Buyer : ${inv.customerName}\n`;
+    message += `Nama Aplikasi : ${items.map(item => item.product.name).join(', ')}\n`;
+    message += `Produk yang dibeli : ${items.map(item => item.product.name).join(', ')}\n`;
+    message += `Jumlah Produk : ${items.reduce((acc, item) => acc + item.quantity, 0)}\n`;
+    message += `Bukti payment : `;
 
     window.open(`https://wa.me/${adminWhatsAppNumber}?text=${encodeURIComponent(message)}`, '_blank');
-  }, [formatPrice]);
+  }, []);
 
   const handleCheckout = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();

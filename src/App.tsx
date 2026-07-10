@@ -806,7 +806,7 @@ export default function App() {
   const handleAddToCart = useCallback((product: DigitalProduct | WebsitePackage) => {
     // If it's a website bundle package, redirect to WhatsApp
     if ('categoryName' in product) {
-      const adminWhatsAppNumber = '6281234567890';
+      const adminWhatsAppNumber = '6289672300222';
       const message = `Halo Admin Madfat! Saya tertarik untuk memesan/berkonsultasi mengenai paket website: ${product.name} (${product.priceText}). Mohon info detailnya.`;
       window.open(`https://wa.me/${adminWhatsAppNumber}?text=${encodeURIComponent(message)}`, '_blank');
       return;
@@ -872,7 +872,7 @@ export default function App() {
   }, []);
 
   const handleDirectWhatsApp = useCallback(() => {
-    const adminWhatsAppNumber = '6281234567890';
+    const adminWhatsAppNumber = '6289672300222';
     const message = `Halo Admin Madfat! Saya ingin berkonsultasi mengenai akun digital premium atau jasa pembuatan website.`;
     window.open(`https://wa.me/${adminWhatsAppNumber}?text=${encodeURIComponent(message)}`, '_blank');
   }, []);
@@ -1126,7 +1126,7 @@ export default function App() {
                           const email = formData.get('email') as string;
                           const msg = formData.get('message') as string;
 
-                          const adminWhatsAppNumber = '6281234567890';
+                          const adminWhatsAppNumber = '6289672300222';
                           const message = `Halo Admin Madfat!\n\nNama: ${name}\nEmail/Kontak: ${email}\nDetail Kebutuhan: ${msg}`;
                           window.open(`https://wa.me/${adminWhatsAppNumber}?text=${encodeURIComponent(message)}`, '_blank');
                         }}
