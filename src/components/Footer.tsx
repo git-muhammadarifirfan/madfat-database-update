@@ -75,19 +75,68 @@ export default function Footer({ onDirectWhatsApp, onCartOpen }: FooterProps) {
         </div>
 
         {/* Col 4: Support */}
-        <div className="hidden md:block">
+        <div className="block">
           <h4 className="font-hero text-sm font-bold text-obsidian mb-4 tracking-wider uppercase">
             SUPPORT
           </h4>
           <ul className="space-y-2.5 font-sans text-xs text-on-surface-variant/60">
-            <li><a href="#faq" className="hover:text-blaze-orange transition-colors">Syarat & Ketentuan</a></li>
-            <li><a href="#faq" className="hover:text-blaze-orange transition-colors">Kebijakan Privasi</a></li>
+            <li>
+              <a
+                href="/syarat-ketentuan"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.history.pushState({}, '', '/syarat-ketentuan');
+                  window.dispatchEvent(new PopStateEvent('popstate'));
+                }}
+                className="hover:text-blaze-orange transition-colors"
+              >
+                Syarat & Ketentuan
+              </a>
+            </li>
+            <li>
+              <a
+                href="/kebijakan-privasi"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.history.pushState({}, '', '/kebijakan-privasi');
+                  window.dispatchEvent(new PopStateEvent('popstate'));
+                }}
+                className="hover:text-blaze-orange transition-colors"
+              >
+                Kebijakan Privasi
+              </a>
+            </li>
             <li>
               <button onClick={onDirectWhatsApp} className="hover:text-blaze-orange transition-colors text-left cursor-pointer bg-transparent border-none p-0 outline-none">
                 Hubungi Kami
               </button>
             </li>
-            <li><a href="#faq" className="hover:text-blaze-orange transition-colors">Bantuan/FAQ</a></li>
+            <li>
+              <a
+                href="#faq"
+                onClick={(e) => {
+                  e.preventDefault();
+                  const target = document.querySelector('#faq');
+                  const globalLenis = (window as any).lenis;
+                  if (target) {
+                    if (window.location.pathname !== '/') {
+                      window.history.pushState({}, '', '/#faq');
+                      window.dispatchEvent(new PopStateEvent('popstate'));
+                    } else if (globalLenis) {
+                      globalLenis.scrollTo(target, { duration: 1.2 });
+                    } else {
+                      target.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  } else {
+                    window.history.pushState({}, '', '/#faq');
+                    window.dispatchEvent(new PopStateEvent('popstate'));
+                  }
+                }}
+                className="hover:text-blaze-orange transition-colors"
+              >
+                Bantuan/FAQ
+              </a>
+            </li>
             <li>
               <button onClick={onCartOpen} className="hover:text-blaze-orange transition-colors text-left cursor-pointer bg-transparent border-none p-0 outline-none">
                 Cek Status Order

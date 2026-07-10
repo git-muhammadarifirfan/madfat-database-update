@@ -11,6 +11,7 @@ import { DIGITAL_PRODUCTS, WEBSITE_PACKAGES, FAQ_ITEMS } from './data';
 import { useGsapLiquidButtons } from './hooks/useGsapLiquidButtons';
 import { DigitalProduct, WebsitePackage, CartItem, Category } from './types';
 import { fetchProductsFromSheets, fetchWebsitePackagesFromSheets, fetchCategoriesFromSheets, DEFAULT_SHEETS_URL } from './api';
+import PolicyPage from './components/PolicyPage';
 
 // Lazy load components for code splitting
 const Navbar = React.lazy(() => import('./components/Navbar'));
@@ -451,6 +452,10 @@ export default function App() {
       return DIGITAL_PRODUCTS;
     }
   });
+
+  const sortedProducts = useMemo(() => {
+    return [...products].sort((a, b) => a.name.localeCompare(b.name));
+  }, [products]);
   const [websitePackages, setWebsitePackages] = useState<WebsitePackage[]>(() => {
     try {
       const cached = localStorage.getItem('madfat_cached_packages');
@@ -935,7 +940,7 @@ export default function App() {
                 </button>
               </div>
             )}
-            
+
             {/* Main Toggle Button */}
             <button
               onClick={() => setIsChatMenuOpen(!isChatMenuOpen)}
@@ -971,7 +976,7 @@ export default function App() {
             currentPath === '/madfatdashboard' || localStorage.getItem('madfat_admin_auth') === 'true' ? (
               <Suspense fallback={<div className="min-h-screen bg-white" />}>
                 <AdminDashboard
-                  products={products}
+                  products={sortedProducts}
                   setProducts={setProducts}
                   websitePackages={websitePackages}
                   setWebsitePackages={setWebsitePackages}
@@ -994,12 +999,16 @@ export default function App() {
           ) : currentPath === '/produk' ? (
             <Suspense fallback={<LoadingFallback />}>
               <DigitalProductPage
-                products={products}
+                products={sortedProducts}
                 categories={categories}
                 onAddToCart={handleAddToCart}
                 formatPrice={formatPrice}
               />
             </Suspense>
+          ) : currentPath === '/syarat-ketentuan' ? (
+            <PolicyPage type="terms" />
+          ) : currentPath === '/kebijakan-privasi' ? (
+            <PolicyPage type="privacy" />
           ) : currentPath === '/jasawebsite' ? (
             <Suspense fallback={<LoadingFallback />}>
               <WebsiteDetailsPage
@@ -1008,10 +1017,10 @@ export default function App() {
                 formatPrice={formatPrice}
               />
             </Suspense>
-          ) : currentPath === '/' || currentPath === '' ? (
+          ) : currentPath === '/' || currentPath === '' || currentPath.startsWith('/#') ? (
             <>
               <Suspense fallback={<LoadingFallback />}>
-                <Hero onDirectWhatsApp={handleDirectWhatsApp} products={products} />
+                <Hero onDirectWhatsApp={handleDirectWhatsApp} products={sortedProducts} />
               </Suspense>
 
               <Suspense fallback={null}>
@@ -1020,7 +1029,7 @@ export default function App() {
 
               <Suspense fallback={<LoadingFallback />}>
                 <DigitalCatalog
-                  products={products}
+                  products={sortedProducts}
                   onAddToCart={handleAddToCart}
                   formatPrice={formatPrice}
                 />

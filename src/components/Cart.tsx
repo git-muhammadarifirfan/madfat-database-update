@@ -47,26 +47,36 @@ function Cart({
   );
 
   const formatPrice = useCallback((value: number) => {
-    return new Intl.NumberFormat('id-ID', {
+    const formatted = new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);
+    return formatted.replace(/\s/g, ' ');
   }, []);
 
-  const sendWhatsAppForInvoice = useCallback((inv: any, items: typeof cartItems) => {
+  const sendWhatsAppForInvoice = useCallback((inv: any, items: typeof cartItems, targetWindow: Window | null) => {
     const adminWhatsAppNumber = '6289672300222';
 
-    let message = `Halo! Saya mau beli\n\n`;
-    message += `Nama Buyer : ${inv.customerName}\n`;
-    message += `Nama Aplikasi : ${items.map(item => item.product.name).join(', ')}\n`;
-    message += `Produk yang dibeli : ${items.map(item => item.product.name).join(', ')}\n`;
-    message += `Jumlah Produk : ${items.reduce((acc, item) => acc + item.quantity, 0)}\n`;
-    message += `Bukti payment : `;
+    let message = `*Halo! Saya mau beli*\n\n`;
+    message += `*No Order :* ${inv.orderId}\n\n`;
+    message += `*Nama Buyer :* ${inv.customerName}\n`;
+    message += `*Nama Aplikasi :* ${items.map(item => `${item.product.name} (${item.product.sub})`).join(', ')}\n`;
+    message += `*Pesanan :*\n`;
+    items.forEach((item) => {
+      message += `- ${item.quantity}x ${item.product.name} (${item.product.sub}) - ${formatPrice(item.product.price)}\n`;
+    });
+    message += `*Total Harga :* *${formatPrice(inv.totalAmount)}*\n\n`;
+    message += `*Bukti payment :* `;
 
-    window.open(`https://wa.me/${adminWhatsAppNumber}?text=${encodeURIComponent(message)}`, '_blank');
-  }, []);
+    const waUrl = `https://wa.me/${adminWhatsAppNumber}?text=${encodeURIComponent(message)}`;
+    if (targetWindow) {
+      targetWindow.location.href = waUrl;
+    } else {
+      window.open(waUrl, '_blank');
+    }
+  }, [formatPrice]);
 
   const handleCheckout = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,6 +90,12 @@ function Cart({
       return;
     }
     setValidationError('');
+
+    // Open a blank window synchronously to prevent browser popup blockers from blocking it
+    const newWindow = window.open('', '_blank');
+    if (newWindow) {
+      newWindow.document.write('<!DOCTYPE html><html><head><title>Menghubungkan ke WhatsApp...</title><style>body { font-family: sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; background-color: #fff8f2; color: #1C1E1C; margin: 0; user-select: none; } .eyes-container { display: flex; gap: 6px; align-items: center; background-color: #FCDFA6; border: 2px solid #1C1E1C; padding: 4px; border-radius: 9999px; box-shadow: 2px 2px 0px 0px #1C1E1C; animation: bounce 0.6s infinite alternate; } .eye { width: 32px; height: 32px; background-color: white; border: 2px solid #1C1E1C; border-radius: 50%; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; } .pupil { width: 14px; height: 14px; background-color: #1C1E1C; border-radius: 50%; position: absolute; animation: lookaround 2.5s infinite ease-in-out; } .loading-text { font-family: sans-serif; font-size: 9px; font-weight: 800; color: #1C1E1C; letter-spacing: 0.05em; text-transform: uppercase; margin-top: 12px; } @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-8px); } } @keyframes lookaround { 0%, 100% { transform: translate(0, 0); } 20% { transform: translate(2px, 1px); } 40% { transform: translate(-2px, -1px); } 60% { transform: translate(0, 2px); } 80% { transform: translate(2px, -1px); } }</style></head><body><div class="eyes-container"><div class="eye"><div class="pupil"></div></div><div class="eye"><div class="pupil"></div></div></div><span class="loading-text">Menghubungkan ke WhatsApp...</span></body></html>');
+    }
 
     setIsSubmitting(true);
 
@@ -126,6 +142,7 @@ function Cart({
       try {
         await createTransactionInSheets(sheetsUrl, newInvoice);
       } catch (err: any) {
+        if (newWindow) newWindow.close();
         console.error('Failed to record transaction to Google Sheets:', err);
         triggerNotification(`Gagal menyimpan transaksi ke Google Sheets: ${err.message || err}`, 'error');
         setIsSubmitting(false);
@@ -147,7 +164,7 @@ function Cart({
     setCustomerEmail('');
 
     // Open WhatsApp redirect (use snapshot)
-    sendWhatsAppForInvoice(newInvoice, itemsSnapshot);
+    sendWhatsAppForInvoice(newInvoice, itemsSnapshot, newWindow);
   }, [cartItems, customerName, customerEmail, totalAmount, sendWhatsAppForInvoice, onClearCart, onClose, triggerNotification]);
 
   return (

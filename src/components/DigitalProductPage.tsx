@@ -161,7 +161,7 @@ export default function DigitalProductPage({
   };
 
   return (
-    <div ref={containerRef} className="bg-[#fff8f2] min-h-screen py-24 px-6 md:px-12">
+    <div ref={containerRef} className="bg-[#fff8f2] min-h-screen pt-28 pb-10 md:pt-36 md:pb-16 px-6 md:px-12">
       <div className="max-w-7xl mx-auto">
 
         {/* Back Button */}
@@ -169,7 +169,7 @@ export default function DigitalProductPage({
           <a
             href="/"
             onClick={handleBackToHome}
-            className="inline-flex items-center gap-2 font-tag text-xs font-bold text-blaze-orange hover:text-obsidian transition-colors uppercase"
+            className="inline-flex items-center gap-2 px-4 py-2 border-2 border-obsidian rounded-xl bg-white text-obsidian hover:bg-[#FF7A30] hover:text-white transition-colors duration-200 shadow-[3px_3px_0px_0px_#1C1E1C] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_#1C1E1C] active:translate-y-[2px] active:shadow-[1px_1px_0px_0px_#1C1E1C] font-tag text-xs font-black uppercase tracking-wider cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4 stroke-[3]" />
             <span>Kembali Ke Beranda</span>
@@ -305,6 +305,18 @@ export default function DigitalProductPage({
             ))}
           </div>
         )}
+
+        {/* Bottom Back Button */}
+        <div className="mt-12 text-center subpage-card">
+          <a
+            href="/"
+            onClick={handleBackToHome}
+            className="inline-flex items-center gap-2 font-tag text-xs font-bold text-blaze-orange hover:text-obsidian transition-colors uppercase"
+          >
+            <ArrowLeft className="w-4 h-4 stroke-[3]" />
+            <span>Kembali Ke Beranda</span>
+          </a>
+        </div>
 
       </div>
     </div>
